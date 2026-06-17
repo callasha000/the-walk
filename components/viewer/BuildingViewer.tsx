@@ -28,7 +28,6 @@ export function BuildingViewer({
 
   return (
     <Canvas
-      shadows
       dpr={[1, 1.75]}
       gl={{ antialias: true, alpha: false }}
       className="h-full w-full"
@@ -47,7 +46,7 @@ export function BuildingViewer({
       />
 
       <ambientLight intensity={0.65} />
-      <directionalLight position={[4, 8, 5]} intensity={2.1} castShadow />
+      <directionalLight position={[4, 8, 5]} intensity={2.1} />
       <directionalLight position={[-5, 4, -6]} intensity={0.65} />
 
       <Suspense fallback={null}>

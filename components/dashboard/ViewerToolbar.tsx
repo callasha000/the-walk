@@ -95,6 +95,7 @@ export function ViewerToolbar({
             <button
               key={tranche}
               type="button"
+              aria-label={`Filter Tranche ${tranche}`}
               onClick={() => onTrancheToggle(tranche)}
               className={clsx(
                 "h-8 rounded-md border px-3 text-xs font-medium transition",
@@ -135,7 +136,7 @@ function IconToggle({
       className={clsx(
         "flex h-9 min-w-9 items-center justify-center gap-2 rounded-md border px-3 text-xs font-medium transition",
         active
-          ? "border-white/20 bg-white/12 text-white"
+          ? "border-white/20 bg-white/10 text-white"
           : "border-white/10 bg-white/[0.04] text-slate-400 hover:bg-white/10",
       )}
     >

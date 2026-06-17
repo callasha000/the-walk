@@ -52,7 +52,12 @@ export function TransparentShell() {
   return (
     <group>
       {shellMasses.map((mass) => (
-        <Box key={mass.name} args={mass.size} position={mass.position}>
+        <Box
+          key={mass.name}
+          args={mass.size}
+          position={mass.position}
+          raycast={() => null}
+        >
           <meshPhysicalMaterial
             color={mass.color}
             opacity={mass.opacity}
@@ -62,7 +67,7 @@ export function TransparentShell() {
             transmission={0.12}
             depthWrite={false}
           />
-          <Edges color="rgba(255,255,255,0.42)" lineWidth={1} />
+          <Edges color="#d9e6ea" lineWidth={1} />
         </Box>
       ))}
     </group>

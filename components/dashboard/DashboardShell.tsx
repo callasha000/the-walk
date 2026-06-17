@@ -71,8 +71,8 @@ export function DashboardShell() {
   };
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#101214] text-white">
-      <div className="grid h-screen grid-cols-1 grid-rows-[auto_1fr_auto] gap-3 p-3 lg:grid-cols-[minmax(0,1fr)_390px] lg:grid-rows-[auto_1fr]">
+    <main className="min-h-screen bg-[#101214] text-white lg:h-screen lg:overflow-hidden">
+      <div className="grid min-h-screen grid-cols-1 gap-3 p-3 lg:h-screen lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_390px] lg:grid-rows-[auto_1fr]">
         <header className="rounded-lg border border-white/10 bg-black/25 px-4 py-3 shadow-glow backdrop-blur-xl lg:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -91,7 +91,7 @@ export function DashboardShell() {
           </div>
         </header>
 
-        <section className="relative min-h-0 overflow-hidden rounded-lg border border-white/10 bg-[#11161a] shadow-glow">
+        <section className="relative h-[560px] min-h-[420px] overflow-hidden rounded-lg border border-white/10 bg-[#11161a] shadow-glow lg:h-auto lg:min-h-0">
           <div className="absolute left-3 right-3 top-3 z-10">
             <ViewerToolbar
               activeLevel={activeLevel}
@@ -121,7 +121,7 @@ export function DashboardShell() {
           />
         </section>
 
-        <aside className="grid min-h-0 gap-3 lg:grid-rows-[auto_minmax(0,1fr)]">
+        <aside className="grid gap-3 lg:min-h-0 lg:grid-rows-[auto_minmax(0,1fr)]">
           <TrancheLegend
             selectedTranches={selectedTranches}
             onToggle={handleTrancheToggle}
