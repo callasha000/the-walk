@@ -73,16 +73,16 @@ describe("project module data", () => {
   });
 
   it("has required metadata and geometry for every module", () => {
-    for (const module of projectModules) {
-      expect(module.id).toMatch(/^M\d+$/);
-      expect(module.unitCode.length).toBeGreaterThan(2);
-      expect(module.level).toBeGreaterThanOrEqual(1);
-      expect(module.level).toBeLessThanOrEqual(7);
-      expect([1, 2, 3, 4]).toContain(module.tranche);
-      expect(module.buildingZone.length).toBeGreaterThan(0);
-      expect(module.position).toHaveLength(3);
-      expect(module.size).toHaveLength(3);
-      expect(module.sourcePage).toBe(module.level + 1);
+    for (const buildingModule of projectModules) {
+      expect(buildingModule.id).toMatch(/^M\d+$/);
+      expect(buildingModule.unitCode.length).toBeGreaterThan(2);
+      expect(buildingModule.level).toBeGreaterThanOrEqual(1);
+      expect(buildingModule.level).toBeLessThanOrEqual(7);
+      expect([1, 2, 3, 4]).toContain(buildingModule.tranche);
+      expect(buildingModule.buildingZone.length).toBeGreaterThan(0);
+      expect(buildingModule.position).toHaveLength(3);
+      expect(buildingModule.size).toHaveLength(3);
+      expect(buildingModule.sourcePage).toBe(buildingModule.level + 1);
     }
   });
 
