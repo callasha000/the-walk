@@ -42,9 +42,20 @@ const modules: BuildingModule[] = [
     unitCode: "K7M-S5",
     level: 7,
     tranche: 1,
-    buildingZone: "Market Rate West Wing",
+    buildingZone: "Market Rate North Wing",
     position: [3, 0, 0],
     size: [0.4, 1, 1.3],
+    sourcePage: 8,
+    notes: "sample",
+  },
+  {
+    id: "M228",
+    unitCode: "A7M-K2W",
+    level: 7,
+    tranche: 1,
+    buildingZone: "Market Rate West Wing",
+    position: [4, 0, 0],
+    size: [1.3, 1, 0.4],
     sourcePage: 8,
     notes: "sample",
   },
@@ -62,7 +73,7 @@ describe("module helpers", () => {
   it("keeps all levels when showAllLevels is true", () => {
     expect(
       filterModules(modules, { level: 1, tranches: [], showAllLevels: true }),
-    ).toHaveLength(4);
+    ).toHaveLength(5);
   });
 
   it("filters by building section zone", () => {
@@ -83,7 +94,7 @@ describe("module helpers", () => {
         zones: ["Market Rate West Wing"],
         showAllLevels: true,
       }).map((module) => module.id),
-    ).toEqual(["M238"]);
+    ).toEqual(["M228"]);
   });
 
   it("returns tranche metadata", () => {
@@ -143,19 +154,19 @@ describe("project module data", () => {
       } else if (buildingModule.tranche === 2) {
         expect(buildingModule.buildingZone).toBe("Market Rate East Wing");
       } else if (buildingModule.tranche === 1 && buildingModule.size[2] > buildingModule.size[0]) {
-        expect(buildingModule.buildingZone).toBe("Market Rate West Wing");
-      } else {
         expect(buildingModule.buildingZone).toBe("Market Rate North Wing");
+      } else {
+        expect(buildingModule.buildingZone).toBe("Market Rate West Wing");
       }
     }
   });
 
-  it("places known east-west-facing market rate north wing modules in the west wing zone", () => {
+  it("swaps known market rate north and west wing module assignments", () => {
     expect(projectModules.find((module) => module.id === "M238")?.buildingZone).toBe(
-      "Market Rate West Wing",
+      "Market Rate North Wing",
     );
     expect(projectModules.find((module) => module.id === "M228")?.buildingZone).toBe(
-      "Market Rate North Wing",
+      "Market Rate West Wing",
     );
   });
 });

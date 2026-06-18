@@ -137,10 +137,10 @@ function zoneForModule(tranche: TrancheId, id: string): BuildingZone {
   }
 
   if (tranche === 1 && isEastWestFacingNorthWingModule(id)) {
-    return "Market Rate West Wing";
+    return "Market Rate North Wing";
   }
 
-  return "Market Rate North Wing";
+  return "Market Rate West Wing";
 }
 
 function isEastWestFacingNorthWingModule(id: string): boolean {

@@ -90,6 +90,10 @@ describe("DashboardShell", () => {
     render(<DashboardShell />);
 
     expect(screen.getByText("Zone filter")).toBeInTheDocument();
+    expect(screen.getByText("Affordable")).toBeInTheDocument();
+    expect(screen.getByText("Market - South")).toBeInTheDocument();
+    expect(screen.getByText("Market - North")).toBeInTheDocument();
+    expect(screen.getByText("Market - West")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Filter Residential Affordable" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Filter Market Rate South Wing" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Filter Market Rate West Wing" })).toBeInTheDocument();
