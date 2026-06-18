@@ -1,4 +1,9 @@
-import type { BuildingModule, TrancheId, Vector3Tuple } from "@/data/module-types";
+import type {
+  BuildingModule,
+  BuildingZone,
+  TrancheId,
+  Vector3Tuple,
+} from "@/data/module-types";
 import {
   registerSheetRect,
   sheetPointToModelPosition,
@@ -46,6 +51,8 @@ const sourceGroups: SourceGroup[] = [
   { level: 7, tranche: 2, buildingZone: "Market Rate Vertical Wing", layout: "vertical-wing", source: "M365:AA7M-S3M-KB1 M373:AI7M-KB4 M363:Y7M-KB9M-KB10 M364:Z7M-KB10M-KB9 M367:AC7M-S4WM-KB1 M368:AD7M-KB1M-S3 M369:AE7M-S3M-KB1 M370:AF7M-KB1M-S3 M374:AJ7M-S6 M375:AK7M-K7 M376:AL7M-B7 M377:AM7M-KB11 M366:AB7M-KB1M-S3 M361:W7M-B6 M362:X7M-KB8 M372:AH7M-KB1M-S3 M371:AG7M-S4WM-KB1" },
   { level: 7, tranche: 3, buildingZone: "Affordable West Wing", layout: "west-wing", source: "M484:BD7M-S4W M485:BC7M-KB7 M486:BB7M-S3 M487:BA7M-KB7 M488:AZ7M-KB17W M489:AY7M-KB6W M490:AX7M-KB5W M491:AW7M-KB16W M492:AV7M-KB5W M493:AU7M-KB6W M494:AT7M-KB15W M495:AS7M-KB6W M496:AR7M-KB5W M497:AQ7M-KB14 M498:DB7M-S4W M499:DB7M-S4W M483:BE7M-B5 M482:BF7M-KB13W" },
 ];
+
+const southWingExceptionModuleIds = new Set(["M1", "M2"]);
 
 function parseSource(source: string): Array<{ id: string; unitCode: string }> {
   return source.split(" ").map((item) => {
@@ -116,12 +123,28 @@ function notesFor(id: string): string {
   return "Source-derived ID/unit, position, and footprint from Module ID PDF.";
 }
 
+function zoneForModule(tranche: TrancheId, id: string): BuildingZone {
+  if (southWingExceptionModuleIds.has(id) || tranche === 3) {
+    return "Market Rate South Wing";
+  }
+
+  if (tranche === 4) {
+    return "Residential Affordable";
+  }
+
+  if (tranche === 2) {
+    return "Market Rate East Wing";
+  }
+
+  return "Market Rate North Wing";
+}
+
 export const modules: BuildingModule[] = sourceGroups.flatMap((group) =>
   parseSource(group.source).map((module, index) => ({
     ...module,
     level: group.level,
     tranche: group.tranche,
-    buildingZone: group.buildingZone,
+    buildingZone: zoneForModule(group.tranche, module.id),
     position: positionFor(group.layout, group.level, module.id, index),
     size: sizeFor(group.layout, module.id),
     sourcePage: group.level + 1,

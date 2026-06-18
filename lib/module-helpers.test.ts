@@ -9,7 +9,7 @@ const modules: BuildingModule[] = [
     unitCode: "DB1M-LH2",
     level: 1,
     tranche: 4,
-    buildingZone: "Market Rate East",
+    buildingZone: "Market Rate South Wing",
     position: [0, 0, 0],
     size: [1, 1, 1],
     sourcePage: 2,
@@ -20,7 +20,7 @@ const modules: BuildingModule[] = [
     unitCode: "AA1M-S3M-KB1",
     level: 1,
     tranche: 2,
-    buildingZone: "Market Rate North",
+    buildingZone: "Market Rate East Wing",
     position: [1, 0, 0],
     size: [1, 1, 1],
     sourcePage: 2,
@@ -31,7 +31,7 @@ const modules: BuildingModule[] = [
     unitCode: "A2M-K2W",
     level: 2,
     tranche: 1,
-    buildingZone: "Affordable West",
+    buildingZone: "Market Rate North Wing",
     position: [2, 0, 0],
     size: [1, 1, 1],
     sourcePage: 3,
@@ -52,6 +52,16 @@ describe("module helpers", () => {
     expect(
       filterModules(modules, { level: 1, tranches: [], showAllLevels: true }),
     ).toHaveLength(3);
+  });
+
+  it("filters by building section zone", () => {
+    expect(
+      filterModules(modules, {
+        level: 1,
+        tranches: [],
+        zones: ["Market Rate East Wing"],
+      }).map((module) => module.id),
+    ).toEqual(["M254"]);
   });
 
   it("returns tranche metadata", () => {
@@ -98,5 +108,21 @@ describe("project module data", () => {
         expect.objectContaining({ id: "M499", unitCode: "DB7M-S4W", level: 7 }),
       ]),
     );
+  });
+
+  it("maps display zones from tranche assignments with the M1 and M2 exception", () => {
+    for (const buildingModule of projectModules) {
+      if (buildingModule.id === "M1" || buildingModule.id === "M2") {
+        expect(buildingModule.buildingZone).toBe("Market Rate South Wing");
+      } else if (buildingModule.tranche === 4) {
+        expect(buildingModule.buildingZone).toBe("Residential Affordable");
+      } else if (buildingModule.tranche === 3) {
+        expect(buildingModule.buildingZone).toBe("Market Rate South Wing");
+      } else if (buildingModule.tranche === 2) {
+        expect(buildingModule.buildingZone).toBe("Market Rate East Wing");
+      } else {
+        expect(buildingModule.buildingZone).toBe("Market Rate North Wing");
+      }
+    }
   });
 });

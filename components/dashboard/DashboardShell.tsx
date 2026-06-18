@@ -4,8 +4,12 @@ import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import { Cuboid, Database, Maximize2 } from "lucide-react";
 import { modules } from "@/data/modules";
-import type { BuildingModule, TrancheId } from "@/data/module-types";
-import { filterModules } from "@/lib/module-helpers";
+import type {
+  BuildingModule,
+  BuildingZone,
+  TrancheId,
+} from "@/data/module-types";
+import { filterModules, sortBuildingZones } from "@/lib/module-helpers";
 import { UnitDetailPanel } from "./UnitDetailPanel";
 import { ViewerToolbar } from "./ViewerToolbar";
 
@@ -27,6 +31,7 @@ const BuildingViewer = dynamic(
 export function DashboardShell() {
   const [activeLevel, setActiveLevel] = useState(1);
   const [selectedTranches, setSelectedTranches] = useState<TrancheId[]>([]);
+  const [selectedZones, setSelectedZones] = useState<BuildingZone[]>([]);
   const [showAllLevels, setShowAllLevels] = useState(true);
   const [showShell, setShowShell] = useState(true);
   const [showWireframe, setShowWireframe] = useState(false);
@@ -40,9 +45,10 @@ export function DashboardShell() {
       filterModules(modules, {
         level: activeLevel,
         tranches: selectedTranches,
+        zones: selectedZones,
         showAllLevels,
       }),
-    [activeLevel, selectedTranches, showAllLevels],
+    [activeLevel, selectedTranches, selectedZones, showAllLevels],
   );
 
   const selectedModule = useMemo(
@@ -61,6 +67,20 @@ export function DashboardShell() {
       }
 
       return [...current, tranche].sort();
+    });
+  };
+
+  const handleZoneToggle = (zone: BuildingZone) => {
+    setSelectedZones((current) => {
+      if (current.length === 0) {
+        return [zone];
+      }
+
+      if (current.includes(zone)) {
+        return current.filter((item) => item !== zone);
+      }
+
+      return sortBuildingZones([...current, zone]);
     });
   };
 
@@ -95,6 +115,7 @@ export function DashboardShell() {
             <ViewerToolbar
               activeLevel={activeLevel}
               selectedTranches={selectedTranches}
+              selectedZones={selectedZones}
               showAllLevels={showAllLevels}
               showShell={showShell}
               showWireframe={showWireframe}
@@ -104,6 +125,7 @@ export function DashboardShell() {
                 setShowAllLevels(false);
               }}
               onTrancheToggle={handleTrancheToggle}
+              onZoneToggle={handleZoneToggle}
               onToggleAllLevels={() => setShowAllLevels((value) => !value)}
               onToggleShell={() => setShowShell((value) => !value)}
               onToggleWireframe={() => setShowWireframe((value) => !value)}

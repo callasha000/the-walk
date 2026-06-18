@@ -21,12 +21,14 @@ describe("ViewerToolbar", () => {
       <ViewerToolbar
         activeLevel={1}
         selectedTranches={[]}
+        selectedZones={[]}
         showAllLevels={false}
         showShell
         showWireframe
         exploded={false}
         onLevelChange={onLevelChange}
         onTrancheToggle={vi.fn()}
+        onZoneToggle={vi.fn()}
         onToggleAllLevels={vi.fn()}
         onToggleShell={vi.fn()}
         onToggleWireframe={vi.fn()}
@@ -37,6 +39,33 @@ describe("ViewerToolbar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Level 3" }));
 
     expect(onLevelChange).toHaveBeenCalledWith(3);
+  });
+
+  it("calls section selection when a section chip is clicked", () => {
+    const onZoneToggle = vi.fn();
+
+    render(
+      <ViewerToolbar
+        activeLevel={1}
+        selectedTranches={[]}
+        selectedZones={[]}
+        showAllLevels={false}
+        showShell
+        showWireframe={false}
+        exploded={false}
+        onLevelChange={vi.fn()}
+        onTrancheToggle={vi.fn()}
+        onZoneToggle={onZoneToggle}
+        onToggleAllLevels={vi.fn()}
+        onToggleShell={vi.fn()}
+        onToggleWireframe={vi.fn()}
+        onToggleExploded={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Filter Market Rate East Wing" }));
+
+    expect(onZoneToggle).toHaveBeenCalledWith("Market Rate East Wing");
   });
 });
 
@@ -55,6 +84,14 @@ describe("DashboardShell", () => {
 
     expect(screen.queryByRole("heading", { name: "Tranches" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: modules[0].id })).toBeInTheDocument();
+  });
+
+  it("renders section filter controls beside the tranche controls", () => {
+    render(<DashboardShell />);
+
+    expect(screen.getByText("Section filter")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filter Residential Affordable" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filter Market Rate South Wing" })).toBeInTheDocument();
   });
 });
 

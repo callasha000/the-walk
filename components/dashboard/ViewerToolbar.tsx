@@ -1,20 +1,22 @@
 "use client";
 
-import { Box, Eye, EyeOff, Layers3, SplitSquareVertical, Waypoints } from "lucide-react";
+import { Box, Eye, EyeOff, Layers3, Map, SplitSquareVertical, Waypoints } from "lucide-react";
 import { clsx } from "clsx";
-import type { TrancheId } from "@/data/module-types";
+import { buildingZones, type BuildingZone, type TrancheId } from "@/data/module-types";
 import { levels } from "@/data/modules";
-import { getTrancheMeta } from "@/lib/module-helpers";
+import { getBuildingZoneMeta, getTrancheMeta } from "@/lib/module-helpers";
 
 type ViewerToolbarProps = {
   activeLevel: number;
   selectedTranches: TrancheId[];
+  selectedZones: BuildingZone[];
   showAllLevels: boolean;
   showShell: boolean;
   showWireframe: boolean;
   exploded: boolean;
   onLevelChange: (level: number) => void;
   onTrancheToggle: (tranche: TrancheId) => void;
+  onZoneToggle: (zone: BuildingZone) => void;
   onToggleAllLevels: () => void;
   onToggleShell: () => void;
   onToggleWireframe: () => void;
@@ -26,12 +28,14 @@ const tranches: TrancheId[] = [1, 2, 3, 4];
 export function ViewerToolbar({
   activeLevel,
   selectedTranches,
+  selectedZones,
   showAllLevels,
   showShell,
   showWireframe,
   exploded,
   onLevelChange,
   onTrancheToggle,
+  onZoneToggle,
   onToggleAllLevels,
   onToggleShell,
   onToggleWireframe,
@@ -108,6 +112,35 @@ export function ViewerToolbar({
               }}
             >
               T{tranche}
+            </button>
+          );
+        })}
+        <span className="flex h-8 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 text-xs text-slate-400">
+          <Map size={14} />
+          Section filter
+        </span>
+        {buildingZones.map((zone) => {
+          const meta = getBuildingZoneMeta(zone);
+          const selected = selectedZones.length === 0 || selectedZones.includes(zone);
+
+          return (
+            <button
+              key={zone}
+              type="button"
+              title={zone}
+              aria-label={`Filter ${zone}`}
+              onClick={() => onZoneToggle(zone)}
+              className={clsx(
+                "h-8 rounded-md border px-3 text-xs font-medium transition",
+                selected
+                  ? "border-white/20 text-white"
+                  : "border-white/5 text-slate-500",
+              )}
+              style={{
+                backgroundColor: selected ? meta.softColor : "rgba(255,255,255,0.03)",
+              }}
+            >
+              {meta.shortLabel}
             </button>
           );
         })}

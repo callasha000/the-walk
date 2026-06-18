@@ -1,4 +1,10 @@
-import type { BuildingModule, TrancheId, ViewerFilters } from "@/data/module-types";
+import {
+  buildingZones,
+  type BuildingModule,
+  type BuildingZone,
+  type TrancheId,
+  type ViewerFilters,
+} from "@/data/module-types";
 
 export type TrancheMeta = {
   id: TrancheId;
@@ -6,6 +12,14 @@ export type TrancheMeta = {
   color: string;
   softColor: string;
   description: string;
+};
+
+export type BuildingZoneMeta = {
+  id: BuildingZone;
+  label: BuildingZone;
+  shortLabel: string;
+  color: string;
+  softColor: string;
 };
 
 export const trancheMeta: Record<TrancheId, TrancheMeta> = {
@@ -39,6 +53,37 @@ export const trancheMeta: Record<TrancheId, TrancheMeta> = {
   },
 };
 
+export const buildingZoneMeta: Record<BuildingZone, BuildingZoneMeta> = {
+  "Residential Affordable": {
+    id: "Residential Affordable",
+    label: "Residential Affordable",
+    shortLabel: "Affordable",
+    color: "#c2d4dc",
+    softColor: "rgba(194, 212, 220, 0.72)",
+  },
+  "Market Rate South Wing": {
+    id: "Market Rate South Wing",
+    label: "Market Rate South Wing",
+    shortLabel: "South",
+    color: "#cbe4c4",
+    softColor: "rgba(203, 228, 196, 0.7)",
+  },
+  "Market Rate East Wing": {
+    id: "Market Rate East Wing",
+    label: "Market Rate East Wing",
+    shortLabel: "East",
+    color: "#ef9dcc",
+    softColor: "rgba(239, 157, 204, 0.72)",
+  },
+  "Market Rate North Wing": {
+    id: "Market Rate North Wing",
+    label: "Market Rate North Wing",
+    shortLabel: "North",
+    color: "#f3c6c6",
+    softColor: "rgba(243, 198, 198, 0.68)",
+  },
+};
+
 export function filterModules(
   modules: BuildingModule[],
   filters: ViewerFilters,
@@ -47,13 +92,25 @@ export function filterModules(
     const matchesLevel = filters.showAllLevels || module.level === filters.level;
     const matchesTranche =
       filters.tranches.length === 0 || filters.tranches.includes(module.tranche);
+    const matchesZone =
+      !filters.zones?.length || filters.zones.includes(module.buildingZone);
 
-    return matchesLevel && matchesTranche;
+    return matchesLevel && matchesTranche && matchesZone;
   });
 }
 
 export function getTrancheMeta(tranche: TrancheId): TrancheMeta {
   return trancheMeta[tranche];
+}
+
+export function getBuildingZoneMeta(zone: BuildingZone): BuildingZoneMeta {
+  return buildingZoneMeta[zone];
+}
+
+export function sortBuildingZones(zones: BuildingZone[]): BuildingZone[] {
+  return [...zones].sort(
+    (left, right) => buildingZones.indexOf(left) - buildingZones.indexOf(right),
+  );
 }
 
 export function getPdfPageImagePath(sourcePage: number): string {
