@@ -6,6 +6,7 @@ import { Suspense, useState } from "react";
 import type { BuildingModule } from "@/data/module-types";
 import { ModuleBox } from "./ModuleBox";
 import { TransparentShell } from "./TransparentShell";
+import { viewerCameraSettings } from "./viewer-settings";
 
 type BuildingViewerProps = {
   modules: BuildingModule[];
@@ -33,16 +34,23 @@ export function BuildingViewer({
       className="h-full w-full"
     >
       <color attach="background" args={["#11161a"]} />
-      <fog attach="fog" args={["#11161a", 18, 42]} />
+      <fog
+        attach="fog"
+        args={["#11161a", viewerCameraSettings.fogNear, viewerCameraSettings.fogFar]}
+      />
 
-      <PerspectiveCamera makeDefault position={[10.5, 7.2, 15.5]} fov={44} />
+      <PerspectiveCamera
+        makeDefault
+        position={viewerCameraSettings.cameraPosition}
+        fov={viewerCameraSettings.cameraFov}
+      />
       <OrbitControls
         makeDefault
         enableDamping
         dampingFactor={0.08}
-        maxDistance={30}
-        minDistance={5}
-        target={[0.2, 2.1, 0.3]}
+        maxDistance={viewerCameraSettings.maxDistance}
+        minDistance={viewerCameraSettings.minDistance}
+        target={viewerCameraSettings.controlsTarget}
       />
 
       <ambientLight intensity={0.65} />
@@ -67,14 +75,14 @@ export function BuildingViewer({
           ))}
         </group>
         <Grid
-          args={[14, 22]}
+          args={viewerCameraSettings.gridArgs}
           cellSize={0.8}
           cellThickness={0.4}
           cellColor="#31404a"
           sectionSize={3.2}
           sectionThickness={0.9}
           sectionColor="#536879"
-          fadeDistance={18}
+          fadeDistance={viewerCameraSettings.gridFadeDistance}
           fadeStrength={1}
           position={[0, -0.64, 0]}
         />

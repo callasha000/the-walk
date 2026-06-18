@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { viewerCameraSettings } from "@/components/viewer/viewer-settings";
+import { moduleCoordinates } from "@/data/module-coordinates";
 import { modules } from "@/data/modules";
+import { shellMasses } from "@/data/shell-masses";
 import { getModuleRenderPosition } from "./viewer-geometry";
 import type { BuildingModule, TrancheId } from "@/data/module-types";
 
@@ -41,10 +44,63 @@ describe("calibrated plan geometry", () => {
 
     expect(max(tranche2, "x")).toBeGreaterThan(max(tranche1, "x"));
   });
+
+  it("uses PDF-derived module footprints instead of a fixed module size", () => {
+    const uniqueFootprints = new Set(
+      levelOneModules.map((module) => `${module.size[0].toFixed(2)}:${module.size[2].toFixed(2)}`),
+    );
+
+    expect(uniqueFootprints.size).toBeGreaterThan(10);
+  });
+
+  it("scales sample module footprints from the PDF outline rectangles", () => {
+    const m1 = byId("M1");
+    const m254 = byId("M254");
+    const m378 = byId("M378");
+    const m390 = byId("M390");
+
+    expect(m378.size[0]).toBeGreaterThan(0.4);
+    expect(m378.size[0]).toBeLessThan(0.5);
+    expect(m378.size[2]).toBeGreaterThan(1.25);
+    expect(m378.size[2]).toBeLessThan(1.4);
+
+    expect(m390.size[0]).toBeGreaterThan(m378.size[0] + 0.05);
+    expect(m390.size[2]).toBeGreaterThan(m378.size[2] + 0.25);
+
+    expect(m254.size[0]).toBeGreaterThan(2.2);
+    expect(m254.size[2]).toBeGreaterThan(0.35);
+    expect(m254.size[2]).toBeLessThan(0.5);
+
+    expect(m1.size[2]).toBeGreaterThan(1);
+  });
+});
+
+describe("viewer framing", () => {
+  it("allows zooming out far enough to compare level 1 with the PDF plan", () => {
+    expect(viewerCameraSettings.maxDistance).toBeGreaterThanOrEqual(60);
+  });
+});
+
+describe("transparent shell geometry", () => {
+  it("derives residential shell masses that cover the PDF module outline extents", () => {
+    expect(shellMasses.length).toBeGreaterThan(10);
+
+    expect(shellCovers("M104")).toBe(true);
+    expect(shellCovers("M254")).toBe(true);
+    expect(shellCovers("M378")).toBe(true);
+    expect(shellCovers("M16")).toBe(true);
+  });
 });
 
 function byTranche(modulesToFilter: BuildingModule[], tranche: TrancheId) {
   return modulesToFilter.filter((module) => module.tranche === tranche);
+}
+
+function byId(moduleId: string) {
+  const foundModule = modules.find((candidate) => candidate.id === moduleId);
+
+  expect(foundModule).toBeDefined();
+  return foundModule!;
 }
 
 function average(modulesToMeasure: BuildingModule[], axis: "x" | "z") {
@@ -66,4 +122,17 @@ function min(modulesToMeasure: BuildingModule[], axis: "x" | "z") {
   const index = axis === "x" ? 0 : 2;
 
   return Math.min(...modulesToMeasure.map((module) => module.position[index]));
+}
+
+function shellCovers(moduleId: string) {
+  const coordinate = moduleCoordinates[moduleId];
+
+  return shellMasses.some(
+    (mass) =>
+      mass.height > 1 &&
+      mass.rect.xMin <= coordinate.sheetXMin &&
+      mass.rect.xMax >= coordinate.sheetXMax &&
+      mass.rect.yMin <= coordinate.sheetYMin &&
+      mass.rect.yMax >= coordinate.sheetYMax,
+  );
 }

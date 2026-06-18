@@ -1,5 +1,5 @@
 import type { BuildingModule, TrancheId, Vector3Tuple } from "@/data/module-types";
-import { sheetPointToModelPosition } from "./geometry-calibration";
+import { sheetPointToModelPosition, sheetSizeToModelSize } from "./geometry-calibration";
 import { moduleCoordinates } from "./module-coordinates";
 
 type LayoutKind = "east-edge" | "north-wing" | "vertical-wing" | "west-wing";
@@ -58,7 +58,11 @@ function positionFor(
 ): Vector3Tuple {
   const coordinate = moduleCoordinates[id];
   if (coordinate) {
-    return sheetPointToModelPosition(coordinate.sheetX, coordinate.sheetY, level);
+    return sheetPointToModelPosition(
+      (coordinate.sheetXMin + coordinate.sheetXMax) / 2,
+      (coordinate.sheetYMin + coordinate.sheetYMax) / 2,
+      level,
+    );
   }
 
   const y = sheetPointToModelPosition(1360, 1000, level)[1];
@@ -80,7 +84,12 @@ function positionFor(
   return [-4.1 + col * 0.72, y, -3.1 - row * 0.72];
 }
 
-function sizeFor(layout: LayoutKind): Vector3Tuple {
+function sizeFor(layout: LayoutKind, id: string): Vector3Tuple {
+  const coordinate = moduleCoordinates[id];
+  if (coordinate) {
+    return sheetSizeToModelSize(coordinate.sheetWidth, coordinate.sheetHeight, 0.56);
+  }
+
   if (layout === "vertical-wing" || layout === "east-edge") {
     return [0.46, 0.56, 0.5];
   }
@@ -90,10 +99,10 @@ function sizeFor(layout: LayoutKind): Vector3Tuple {
 
 function notesFor(id: string): string {
   if (id === "M211") {
-    return "Source-derived ID/unit from PDF text layer; M211 corrects a level 6 text-layer OCR omission. Procedural position is approximate.";
+    return "Source-derived ID/unit and PDF footprint; M211 corrects a level 6 text-layer OCR omission.";
   }
 
-  return "Source-derived ID/unit from Module ID PDF. Procedural position is approximate.";
+  return "Source-derived ID/unit, position, and footprint from Module ID PDF.";
 }
 
 export const modules: BuildingModule[] = sourceGroups.flatMap((group) =>
@@ -103,7 +112,7 @@ export const modules: BuildingModule[] = sourceGroups.flatMap((group) =>
     tranche: group.tranche,
     buildingZone: group.buildingZone,
     position: positionFor(group.layout, group.level, module.id, index),
-    size: sizeFor(group.layout),
+    size: sizeFor(group.layout, module.id),
     sourcePage: group.level + 1,
     notes: notesFor(module.id),
   })),

@@ -40,3 +40,15 @@ export function sheetRectToModelMass(
     ],
   };
 }
+
+export function sheetSizeToModelSize(
+  sheetWidth: number,
+  sheetHeight: number,
+  height: number,
+): Vector3Tuple {
+  return [
+    sheetWidth * sheetCalibration.scale,
+    height,
+    sheetHeight * sheetCalibration.scale,
+  ];
+}
