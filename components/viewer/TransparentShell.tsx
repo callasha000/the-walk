@@ -1,6 +1,7 @@
 "use client";
 
 import { Box, Edges, Line } from "@react-three/drei";
+import { DoubleSide } from "three";
 import {
   sheetPointToModelPosition,
   sheetRectToModelMass,
@@ -13,6 +14,11 @@ import {
   type ShellMass,
   type ShellPoint,
 } from "@/data/shell-masses";
+import {
+  buildShellFacadeLines,
+  facadeShellVisualStyle,
+  type FacadeLine,
+} from "@/lib/shell-facade";
 
 export function TransparentShell() {
   return (
@@ -34,24 +40,51 @@ function ShellElement({ mass }: { mass: ShellMass }) {
 
 function ShellBox({ mass }: { mass: RectShellMass }) {
   const modelMass = sheetRectToModelMass(mass.rect, mass.height, mass.yCenter);
+  const usesFacadeSkin = mass.name !== "podium envelope";
 
   return (
-    <Box
-      args={modelMass.size}
-      position={modelMass.position}
-      raycast={() => null}
-    >
-      <meshPhysicalMaterial
-        color={mass.color}
-        opacity={mass.opacity}
-        transparent
-        roughness={0.22}
-        metalness={0.02}
-        transmission={0.12}
-        depthWrite={false}
-      />
-      <Edges color="#d9e6ea" lineWidth={1} />
-    </Box>
+    <group>
+      <Box
+        args={modelMass.size}
+        position={modelMass.position}
+        raycast={() => null}
+      >
+        <meshPhysicalMaterial
+          color={usesFacadeSkin ? facadeShellVisualStyle.fillColor : mass.color}
+          opacity={usesFacadeSkin ? facadeShellVisualStyle.fillOpacity : mass.opacity}
+          transparent
+          roughness={0.36}
+          metalness={0.02}
+          transmission={usesFacadeSkin ? 0.22 : 0.12}
+          depthWrite={false}
+          side={DoubleSide}
+        />
+        <Edges
+          color={usesFacadeSkin ? facadeShellVisualStyle.edgeColor : "#d9e6ea"}
+          lineWidth={usesFacadeSkin ? 0.8 : 1}
+        />
+      </Box>
+
+      {usesFacadeSkin && <ShellFacadeOverlay lines={buildShellFacadeLines(modelMass)} />}
+    </group>
+  );
+}
+
+function ShellFacadeOverlay({ lines }: { lines: FacadeLine[] }) {
+  return (
+    <group>
+      {lines.map((line, index) => (
+        <Line
+          key={`${line.kind}:${index}`}
+          points={line.points}
+          color={line.color}
+          lineWidth={line.lineWidth}
+          opacity={line.opacity}
+          transparent
+          depthWrite={false}
+        />
+      ))}
+    </group>
   );
 }
 
