@@ -1,0 +1,3 @@
+# Reference/source files that are not needed by the deployed app.
+*.pdf
+artifacts/

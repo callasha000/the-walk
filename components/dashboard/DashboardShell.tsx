@@ -6,7 +6,6 @@ import { Cuboid, Database, Maximize2 } from "lucide-react";
 import { modules } from "@/data/modules";
 import type { BuildingModule, TrancheId } from "@/data/module-types";
 import { filterModules } from "@/lib/module-helpers";
-import { TrancheLegend } from "./TrancheLegend";
 import { UnitDetailPanel } from "./UnitDetailPanel";
 import { ViewerToolbar } from "./ViewerToolbar";
 
@@ -30,7 +29,7 @@ export function DashboardShell() {
   const [selectedTranches, setSelectedTranches] = useState<TrancheId[]>([]);
   const [showAllLevels, setShowAllLevels] = useState(true);
   const [showShell, setShowShell] = useState(true);
-  const [showWireframe, setShowWireframe] = useState(true);
+  const [showWireframe, setShowWireframe] = useState(false);
   const [exploded, setExploded] = useState(false);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(
     modules[0]?.id ?? null,
@@ -121,11 +120,7 @@ export function DashboardShell() {
           />
         </section>
 
-        <aside className="grid gap-3 lg:min-h-0 lg:grid-rows-[auto_minmax(0,1fr)]">
-          <TrancheLegend
-            selectedTranches={selectedTranches}
-            onToggle={handleTrancheToggle}
-          />
+        <aside className="lg:min-h-0">
           <UnitDetailPanel module={selectedModule} />
         </aside>
       </div>
