@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { modules } from "@/data/modules";
 import { DashboardShell } from "./DashboardShell";
@@ -20,6 +20,7 @@ describe("ViewerToolbar", () => {
     render(
       <ViewerToolbar
         activeLevel={1}
+        selectedModule={modules[0]}
         selectedTranches={[]}
         selectedZones={[]}
         showAllLevels={false}
@@ -33,6 +34,7 @@ describe("ViewerToolbar", () => {
         onToggleShell={vi.fn()}
         onToggleWireframe={vi.fn()}
         onToggleExploded={vi.fn()}
+        onOpenModuleDetail={vi.fn()}
       />,
     );
 
@@ -47,6 +49,7 @@ describe("ViewerToolbar", () => {
     render(
       <ViewerToolbar
         activeLevel={1}
+        selectedModule={modules[0]}
         selectedTranches={[]}
         selectedZones={[]}
         showAllLevels={false}
@@ -60,6 +63,7 @@ describe("ViewerToolbar", () => {
         onToggleShell={vi.fn()}
         onToggleWireframe={vi.fn()}
         onToggleExploded={vi.fn()}
+        onOpenModuleDetail={vi.fn()}
       />,
     );
 
@@ -72,6 +76,7 @@ describe("ViewerToolbar", () => {
     render(
       <ViewerToolbar
         activeLevel={1}
+        selectedModule={modules[0]}
         selectedTranches={[]}
         selectedZones={[]}
         showAllLevels={false}
@@ -85,6 +90,7 @@ describe("ViewerToolbar", () => {
         onToggleShell={vi.fn()}
         onToggleWireframe={vi.fn()}
         onToggleExploded={vi.fn()}
+        onOpenModuleDetail={vi.fn()}
       />,
     );
 
@@ -98,6 +104,37 @@ describe("ViewerToolbar", () => {
 
     expect(filtersButton).toHaveAttribute("aria-expanded", "true");
     expect(controls).not.toHaveClass("hidden");
+  });
+
+  it("opens selected module details from the compact mobile control", () => {
+    const onOpenModuleDetail = vi.fn();
+
+    render(
+      <ViewerToolbar
+        activeLevel={1}
+        selectedModule={modules[0]}
+        selectedTranches={[]}
+        selectedZones={[]}
+        showAllLevels={false}
+        showShell
+        showWireframe={false}
+        exploded={false}
+        onLevelChange={vi.fn()}
+        onTrancheToggle={vi.fn()}
+        onZoneToggle={vi.fn()}
+        onToggleAllLevels={vi.fn()}
+        onToggleShell={vi.fn()}
+        onToggleWireframe={vi.fn()}
+        onToggleExploded={vi.fn()}
+        onOpenModuleDetail={onOpenModuleDetail}
+      />,
+    );
+
+    expect(screen.getByText(modules[0].id)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: `View ${modules[0].id} details` }));
+
+    expect(onOpenModuleDetail).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -129,6 +166,22 @@ describe("DashboardShell", () => {
     expect(screen.getByRole("button", { name: "Filter Residential Affordable" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Filter Market Rate South Wing" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Filter Market Rate West Wing" })).toBeInTheDocument();
+  });
+
+  it("opens selected module details in a mobile bottom sheet from the view button", async () => {
+    render(<DashboardShell />);
+
+    expect(screen.queryByRole("dialog", { name: "Selected module details" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: `View ${modules[0].id} details` }));
+
+    expect(await screen.findByRole("dialog", { name: "Selected module details" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Close module details" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Selected module details" })).not.toBeInTheDocument();
+    });
   });
 });
 

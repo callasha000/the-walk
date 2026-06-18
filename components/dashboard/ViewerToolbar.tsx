@@ -13,12 +13,18 @@ import {
   Waypoints,
 } from "lucide-react";
 import { clsx } from "clsx";
-import { buildingZones, type BuildingZone, type TrancheId } from "@/data/module-types";
+import {
+  buildingZones,
+  type BuildingModule,
+  type BuildingZone,
+  type TrancheId,
+} from "@/data/module-types";
 import { levels } from "@/data/modules";
 import { getBuildingZoneMeta, getTrancheMeta } from "@/lib/module-helpers";
 
 type ViewerToolbarProps = {
   activeLevel: number;
+  selectedModule: BuildingModule | null;
   selectedTranches: TrancheId[];
   selectedZones: BuildingZone[];
   showAllLevels: boolean;
@@ -32,12 +38,14 @@ type ViewerToolbarProps = {
   onToggleShell: () => void;
   onToggleWireframe: () => void;
   onToggleExploded: () => void;
+  onOpenModuleDetail: () => void;
 };
 
 const tranches: TrancheId[] = [1, 2, 3, 4];
 
 export function ViewerToolbar({
   activeLevel,
+  selectedModule,
   selectedTranches,
   selectedZones,
   showAllLevels,
@@ -51,27 +59,54 @@ export function ViewerToolbar({
   onToggleShell,
   onToggleWireframe,
   onToggleExploded,
+  onOpenModuleDetail,
 }: ViewerToolbarProps) {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   return (
     <section className="rounded-lg border border-white/10 bg-black/25 p-3 shadow-glow backdrop-blur-xl">
-      <button
-        type="button"
-        aria-expanded={mobileFiltersOpen}
-        aria-controls="viewer-toolbar-controls"
-        onClick={() => setMobileFiltersOpen((open) => !open)}
-        className="flex h-9 w-full items-center justify-between rounded-md border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-slate-200 transition hover:bg-white/10 lg:hidden"
-      >
-        <span className="flex items-center gap-2">
-          <SlidersHorizontal size={15} />
-          Filters
-        </span>
-        <ChevronDown
-          size={16}
-          className={clsx("transition-transform", mobileFiltersOpen && "rotate-180")}
-        />
-      </button>
+      <div className="flex items-center gap-2 lg:hidden">
+        <button
+          type="button"
+          aria-expanded={mobileFiltersOpen}
+          aria-controls="viewer-toolbar-controls"
+          onClick={() => setMobileFiltersOpen((open) => !open)}
+          className="flex h-9 w-28 shrink-0 items-center justify-between rounded-md border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-slate-200 transition hover:bg-white/10"
+        >
+          <span className="flex items-center gap-2">
+            <SlidersHorizontal size={15} />
+            Filters
+          </span>
+          <ChevronDown
+            size={16}
+            className={clsx("transition-transform", mobileFiltersOpen && "rotate-180")}
+          />
+        </button>
+
+        <div className="flex h-9 min-w-0 flex-1 items-center justify-between gap-2 rounded-md border border-white/10 bg-white/[0.04] px-2">
+          <div className="min-w-0">
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              Selected
+            </span>
+            <span className="block truncate text-xs font-semibold text-white">
+              {selectedModule?.id ?? "None"}
+            </span>
+          </div>
+          <button
+            type="button"
+            disabled={!selectedModule}
+            aria-label={
+              selectedModule
+                ? `View ${selectedModule.id} details`
+                : "View selected module details"
+            }
+            onClick={onOpenModuleDetail}
+            className="h-7 shrink-0 rounded-md border border-white/10 bg-white/10 px-3 text-xs font-semibold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:text-slate-500"
+          >
+            View
+          </button>
+        </div>
+      </div>
 
       <div
         id="viewer-toolbar-controls"

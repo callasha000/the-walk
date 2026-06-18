@@ -1,8 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
-import { Cuboid, Database, Maximize2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { clsx } from "clsx";
+import { Cuboid, Database, Maximize2, X } from "lucide-react";
 import { modules } from "@/data/modules";
 import type {
   BuildingModule,
@@ -39,6 +40,9 @@ export function DashboardShell() {
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(
     modules[0]?.id ?? null,
   );
+  const [mobileDetailMounted, setMobileDetailMounted] = useState(false);
+  const [mobileDetailVisible, setMobileDetailVisible] = useState(false);
+  const mobileDetailTimerRef = useRef<number | null>(null);
 
   const visibleModules = useMemo(
     () =>
@@ -89,6 +93,40 @@ export function DashboardShell() {
     setActiveLevel(module.level);
   };
 
+  const clearMobileDetailTimer = () => {
+    if (mobileDetailTimerRef.current !== null) {
+      window.clearTimeout(mobileDetailTimerRef.current);
+      mobileDetailTimerRef.current = null;
+    }
+  };
+
+  const handleOpenMobileDetail = () => {
+    clearMobileDetailTimer();
+    setMobileDetailMounted(true);
+
+    mobileDetailTimerRef.current = window.setTimeout(() => {
+      setMobileDetailVisible(true);
+      mobileDetailTimerRef.current = null;
+    }, 20);
+  };
+
+  const handleCloseMobileDetail = () => {
+    clearMobileDetailTimer();
+    setMobileDetailVisible(false);
+
+    mobileDetailTimerRef.current = window.setTimeout(() => {
+      setMobileDetailMounted(false);
+      mobileDetailTimerRef.current = null;
+    }, 560);
+  };
+
+  useEffect(
+    () => () => {
+      clearMobileDetailTimer();
+    },
+    [],
+  );
+
   return (
     <main className="min-h-screen bg-[#101214] text-white lg:h-screen lg:overflow-hidden">
       <div className="grid min-h-screen grid-cols-1 gap-3 p-3 lg:h-screen lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_390px] lg:grid-rows-[auto_1fr]">
@@ -114,6 +152,7 @@ export function DashboardShell() {
           <div className="absolute left-3 right-3 top-3 z-10">
             <ViewerToolbar
               activeLevel={activeLevel}
+              selectedModule={selectedModule}
               selectedTranches={selectedTranches}
               selectedZones={selectedZones}
               showAllLevels={showAllLevels}
@@ -130,6 +169,7 @@ export function DashboardShell() {
               onToggleShell={() => setShowShell((value) => !value)}
               onToggleWireframe={() => setShowWireframe((value) => !value)}
               onToggleExploded={() => setExploded((value) => !value)}
+              onOpenModuleDetail={handleOpenMobileDetail}
             />
           </div>
           <BuildingViewer
@@ -142,11 +182,74 @@ export function DashboardShell() {
           />
         </section>
 
-        <aside className="lg:min-h-0">
+        <aside className="hidden lg:block lg:min-h-0">
           <UnitDetailPanel module={selectedModule} />
         </aside>
       </div>
+
+      <MobileModuleBottomSheet
+        module={selectedModule}
+        mounted={mobileDetailMounted}
+        visible={mobileDetailVisible}
+        onClose={handleCloseMobileDetail}
+      />
     </main>
+  );
+}
+
+function MobileModuleBottomSheet({
+  module,
+  mounted,
+  visible,
+  onClose,
+}: {
+  module: BuildingModule | null;
+  mounted: boolean;
+  visible: boolean;
+  onClose: () => void;
+}) {
+  if (!mounted) {
+    return null;
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Selected module details"
+      className="fixed inset-0 z-50 flex items-end lg:hidden"
+    >
+      <div
+        className={clsx(
+          "absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-[520ms] ease-out",
+          visible ? "opacity-100" : "opacity-0",
+        )}
+      />
+      <div className="relative z-10 w-full">
+        <button
+          type="button"
+          aria-label="Close module details"
+          onClick={onClose}
+          className={clsx(
+            "absolute -top-14 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#12171b]/95 text-slate-200 shadow-xl shadow-black/30 backdrop-blur transition-all duration-[520ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-white/12",
+            visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
+          )}
+        >
+          <X size={16} />
+        </button>
+        <div
+          className={clsx(
+            "max-h-[86vh] overflow-hidden rounded-t-xl border border-white/10 bg-[#12171b] p-3 shadow-2xl transition-transform duration-[520ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
+            visible ? "translate-y-0" : "translate-y-full",
+          )}
+        >
+          <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/25" />
+          <div className="max-h-[calc(86vh-2.75rem)] overflow-y-auto pt-1">
+            <UnitDetailPanel module={module} />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
