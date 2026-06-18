@@ -1,5 +1,9 @@
 import type { BuildingModule, TrancheId, Vector3Tuple } from "@/data/module-types";
-import { sheetPointToModelPosition, sheetSizeToModelSize } from "./geometry-calibration";
+import {
+  registerSheetRect,
+  sheetPointToModelPosition,
+  sheetSizeToModelSize,
+} from "./geometry-calibration";
 import { moduleCoordinates } from "./module-coordinates";
 
 type LayoutKind = "east-edge" | "north-wing" | "vertical-wing" | "west-wing";
@@ -58,9 +62,16 @@ function positionFor(
 ): Vector3Tuple {
   const coordinate = moduleCoordinates[id];
   if (coordinate) {
+    const registeredRect = registerSheetRect(level, {
+      xMin: coordinate.sheetXMin,
+      xMax: coordinate.sheetXMax,
+      yMin: coordinate.sheetYMin,
+      yMax: coordinate.sheetYMax,
+    });
+
     return sheetPointToModelPosition(
-      (coordinate.sheetXMin + coordinate.sheetXMax) / 2,
-      (coordinate.sheetYMin + coordinate.sheetYMax) / 2,
+      (registeredRect.xMin + registeredRect.xMax) / 2,
+      (registeredRect.yMin + registeredRect.yMax) / 2,
       level,
     );
   }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { viewerCameraSettings } from "@/components/viewer/viewer-settings";
+import { registerSheetRect } from "@/data/geometry-calibration";
 import { moduleCoordinates } from "@/data/module-coordinates";
 import { modules } from "@/data/modules";
 import { shellMasses } from "@/data/shell-masses";
@@ -73,6 +74,16 @@ describe("calibrated plan geometry", () => {
 
     expect(m1.size[2]).toBeGreaterThan(1);
   });
+
+  it("aligns level 1 modules after the west not-in-scope bay with equivalent upper-level modules", () => {
+    expect(leftFace(byId("M378"))).toBeCloseTo(leftFace(byId("M394")), 1);
+    expect(leftFace(byId("M390"))).toBeCloseTo(leftFace(byId("M406")), 1);
+  });
+
+  it("keeps equivalent north and east wing module bays registered across levels", () => {
+    expect(leftFace(byId("M104"))).toBeCloseTo(leftFace(byId("M126")), 1);
+    expect(leftFace(byId("M3"))).toBeCloseTo(leftFace(byId("M17")), 1);
+  });
 });
 
 describe("viewer framing", () => {
@@ -103,6 +114,10 @@ function byId(moduleId: string) {
   return foundModule!;
 }
 
+function leftFace(module: BuildingModule) {
+  return module.position[0] - module.size[0] / 2;
+}
+
 function average(modulesToMeasure: BuildingModule[], axis: "x" | "z") {
   const index = axis === "x" ? 0 : 2;
 
@@ -126,13 +141,19 @@ function min(modulesToMeasure: BuildingModule[], axis: "x" | "z") {
 
 function shellCovers(moduleId: string) {
   const coordinate = moduleCoordinates[moduleId];
+  const registeredRect = registerSheetRect(coordinate.level, {
+    xMin: coordinate.sheetXMin,
+    xMax: coordinate.sheetXMax,
+    yMin: coordinate.sheetYMin,
+    yMax: coordinate.sheetYMax,
+  });
 
   return shellMasses.some(
     (mass) =>
       mass.height > 1 &&
-      mass.rect.xMin <= coordinate.sheetXMin &&
-      mass.rect.xMax >= coordinate.sheetXMax &&
-      mass.rect.yMin <= coordinate.sheetYMin &&
-      mass.rect.yMax >= coordinate.sheetYMax,
+      mass.rect.xMin <= registeredRect.xMin &&
+      mass.rect.xMax >= registeredRect.xMax &&
+      mass.rect.yMin <= registeredRect.yMin &&
+      mass.rect.yMax >= registeredRect.yMax,
   );
 }

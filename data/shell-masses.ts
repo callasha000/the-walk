@@ -1,4 +1,4 @@
-import { sheetCalibration } from "@/data/geometry-calibration";
+import { registerSheetRect, sheetCalibration } from "@/data/geometry-calibration";
 import type { TrancheId } from "@/data/module-types";
 import { moduleCoordinates } from "@/data/module-coordinates";
 import { levels, modules } from "@/data/modules";
@@ -42,7 +42,7 @@ const trancheShellStyles: Record<TrancheId, { color: string; opacity: number }> 
 export const shellMasses: ShellMass[] = [
   {
     name: "podium envelope",
-    rect: { xMin: 786.8, xMax: 1902.3, yMin: 1127.9, yMax: 1918.1 },
+    rect: registerSheetRect(1, { xMin: 786.8, xMax: 1902.3, yMin: 1127.9, yMax: 1918.1 }),
     height: 0.55,
     yCenter: -0.34,
     color: "#6f7f7d",
@@ -77,12 +77,14 @@ function levelOneFootprints(): ShellFootprint[] {
 
       return {
         zone: module.buildingZone,
-        rect: padRect({
-          xMin: coordinate.sheetXMin,
-          xMax: coordinate.sheetXMax,
-          yMin: coordinate.sheetYMin,
-          yMax: coordinate.sheetYMax,
-        }),
+        rect: padRect(
+          registerSheetRect(module.level, {
+            xMin: coordinate.sheetXMin,
+            xMax: coordinate.sheetXMax,
+            yMin: coordinate.sheetYMin,
+            yMax: coordinate.sheetYMax,
+          }),
+        ),
         color: style.color,
         opacity: style.opacity,
       };
