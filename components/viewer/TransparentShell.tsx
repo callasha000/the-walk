@@ -1,7 +1,8 @@
 "use client";
 
 import { Box, Edges, Line } from "@react-three/drei";
-import { DoubleSide } from "three";
+import { useMemo } from "react";
+import { DoubleSide, Shape, Vector2 } from "three";
 import {
   sheetPointToModelPosition,
   sheetRectToModelMass,
@@ -14,11 +15,6 @@ import {
   type ShellMass,
   type ShellPoint,
 } from "@/data/shell-masses";
-import {
-  buildShellFacadeLines,
-  facadeShellVisualStyle,
-  type FacadeLine,
-} from "@/lib/shell-facade";
 
 export function TransparentShell() {
   return (
@@ -40,51 +36,24 @@ function ShellElement({ mass }: { mass: ShellMass }) {
 
 function ShellBox({ mass }: { mass: RectShellMass }) {
   const modelMass = sheetRectToModelMass(mass.rect, mass.height, mass.yCenter);
-  const usesFacadeSkin = mass.name !== "podium envelope";
 
   return (
-    <group>
-      <Box
-        args={modelMass.size}
-        position={modelMass.position}
-        raycast={() => null}
-      >
-        <meshPhysicalMaterial
-          color={usesFacadeSkin ? facadeShellVisualStyle.fillColor : mass.color}
-          opacity={usesFacadeSkin ? facadeShellVisualStyle.fillOpacity : mass.opacity}
-          transparent
-          roughness={0.36}
-          metalness={0.02}
-          transmission={usesFacadeSkin ? 0.22 : 0.12}
-          depthWrite={false}
-          side={DoubleSide}
-        />
-        <Edges
-          color={usesFacadeSkin ? facadeShellVisualStyle.edgeColor : "#d9e6ea"}
-          lineWidth={usesFacadeSkin ? 0.8 : 1}
-        />
-      </Box>
-
-      {usesFacadeSkin && <ShellFacadeOverlay lines={buildShellFacadeLines(modelMass)} />}
-    </group>
-  );
-}
-
-function ShellFacadeOverlay({ lines }: { lines: FacadeLine[] }) {
-  return (
-    <group>
-      {lines.map((line, index) => (
-        <Line
-          key={`${line.kind}:${index}`}
-          points={line.points}
-          color={line.color}
-          lineWidth={line.lineWidth}
-          opacity={line.opacity}
-          transparent
-          depthWrite={false}
-        />
-      ))}
-    </group>
+    <Box
+      args={modelMass.size}
+      position={modelMass.position}
+      raycast={() => null}
+    >
+      <meshPhysicalMaterial
+        color={mass.color}
+        opacity={mass.opacity}
+        transparent
+        roughness={0.22}
+        metalness={0.02}
+        transmission={0.12}
+        depthWrite={false}
+      />
+      <Edges color="#d9e6ea" lineWidth={1} />
+    </Box>
   );
 }
 
@@ -94,17 +63,66 @@ function ShellFootprintOutline({ mass }: { mass: FootprintShellMass }) {
   const closedFootprint = [...mass.footprint, mass.footprint[0]];
   const bottomLine = closedFootprint.map((point) => shellPointToModelPoint(point, bottomY));
   const topLine = closedFootprint.map((point) => shellPointToModelPoint(point, topY));
+  const footprintShape = useMemo(() => {
+    const [firstPoint, ...remainingPoints] = mass.footprint.map((point) => {
+      const [x, , z] = sheetPointToModelPosition(point.x, point.y, 1);
+
+      return new Vector2(x, z);
+    });
+    const shape = new Shape();
+
+    shape.moveTo(firstPoint.x, firstPoint.y);
+    remainingPoints.forEach((point) => shape.lineTo(point.x, point.y));
+    shape.closePath();
+
+    return shape;
+  }, [mass.footprint]);
+  const lineOpacity = Math.max(mass.opacity, 0.62);
 
   return (
     <group>
-      <Line points={bottomLine} color={mass.color} lineWidth={1.2} />
-      <Line points={topLine} color={mass.color} lineWidth={1.2} />
+      <mesh position={[0, bottomY, 0]} rotation={[Math.PI / 2, 0, 0]} raycast={() => null}>
+        <shapeGeometry args={[footprintShape]} />
+        <meshBasicMaterial
+          color={mass.color}
+          opacity={mass.opacity}
+          transparent
+          side={DoubleSide}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh position={[0, topY, 0]} rotation={[Math.PI / 2, 0, 0]} raycast={() => null}>
+        <shapeGeometry args={[footprintShape]} />
+        <meshBasicMaterial
+          color={mass.color}
+          opacity={mass.opacity}
+          transparent
+          side={DoubleSide}
+          depthWrite={false}
+        />
+      </mesh>
+      <Line
+        points={bottomLine}
+        color={mass.color}
+        lineWidth={1.2}
+        opacity={lineOpacity}
+        transparent
+      />
+      <Line
+        points={topLine}
+        color={mass.color}
+        lineWidth={1.2}
+        opacity={lineOpacity}
+        transparent
+      />
       {mass.footprint.map((point) => (
         <Line
           key={`${point.x}:${point.y}`}
           points={[shellPointToModelPoint(point, bottomY), shellPointToModelPoint(point, topY)]}
           color={mass.color}
           lineWidth={1.2}
+          opacity={lineOpacity}
+          transparent
         />
       ))}
     </group>

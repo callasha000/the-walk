@@ -119,6 +119,18 @@ describe("transparent shell geometry", () => {
     expect(bounds.yMin).toBeCloseTo(761.2, 0);
     expect(bounds.yMax).toBeCloseTo(977.9, 0);
   });
+
+  it("uses the same garage context material for the pavilion and podium shells", () => {
+    const podium = shellMasses.find((mass) => mass.name === "podium envelope");
+    const pavilion = shellMasses.find(
+      (mass) => mass.name === "market rate pavilion not-in-scope outline",
+    );
+
+    expect(podium).toBeDefined();
+    expect(pavilion).toBeDefined();
+    expect(pavilion?.color).toBe(podium?.color);
+    expect(pavilion?.opacity).toBe(podium?.opacity);
+  });
 });
 
 function byTranche(modulesToFilter: BuildingModule[], tranche: TrancheId) {

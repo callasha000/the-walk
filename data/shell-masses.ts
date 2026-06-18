@@ -55,6 +55,10 @@ const twoLevelHeight = sheetCalibration.levelHeight + moduleHeight;
 const twoLevelYCenter = sheetCalibration.levelHeight / 2;
 const mergeTolerance = 6;
 const shellPadding = 2;
+const garageContextShellStyle = {
+  color: "#6f7f7d",
+  opacity: 0.14,
+};
 
 const trancheShellStyles: Record<TrancheId, { color: string; opacity: number }> = {
   1: { color: "#f4f0e9", opacity: 0.1 },
@@ -69,8 +73,7 @@ export const shellMasses: ShellMass[] = [
     rect: registerSheetRect(1, { xMin: 786.8, xMax: 1902.3, yMin: 1127.9, yMax: 1918.1 }),
     height: 0.55,
     yCenter: -0.34,
-    color: "#6f7f7d",
-    opacity: 0.14,
+    ...garageContextShellStyle,
   },
   {
     name: "market rate pavilion not-in-scope outline",
@@ -91,8 +94,7 @@ export const shellMasses: ShellMass[] = [
     ]),
     height: twoLevelHeight,
     yCenter: twoLevelYCenter,
-    color: "#d9e6ea",
-    opacity: 0,
+    ...garageContextShellStyle,
     outlineOnly: true,
   },
   ...buildResidentialShellMasses(),
