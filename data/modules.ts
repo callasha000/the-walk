@@ -136,7 +136,17 @@ function zoneForModule(tranche: TrancheId, id: string): BuildingZone {
     return "Market Rate East Wing";
   }
 
+  if (tranche === 1 && isEastWestFacingNorthWingModule(id)) {
+    return "Market Rate West Wing";
+  }
+
   return "Market Rate North Wing";
+}
+
+function isEastWestFacingNorthWingModule(id: string): boolean {
+  const coordinate = moduleCoordinates[id];
+
+  return Boolean(coordinate && coordinate.sheetHeight > coordinate.sheetWidth);
 }
 
 export const modules: BuildingModule[] = sourceGroups.flatMap((group) =>

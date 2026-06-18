@@ -4,6 +4,7 @@ export const buildingZones = [
   "Residential Affordable",
   "Market Rate South Wing",
   "Market Rate East Wing",
+  "Market Rate West Wing",
   "Market Rate North Wing",
 ] as const;
 

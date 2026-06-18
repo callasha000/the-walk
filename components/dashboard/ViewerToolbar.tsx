@@ -117,7 +117,7 @@ export function ViewerToolbar({
         })}
         <span className="flex h-8 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 text-xs text-slate-400">
           <Map size={14} />
-          Section filter
+          Zone filter
         </span>
         {buildingZones.map((zone) => {
           const meta = getBuildingZoneMeta(zone);

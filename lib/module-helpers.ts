@@ -75,6 +75,13 @@ export const buildingZoneMeta: Record<BuildingZone, BuildingZoneMeta> = {
     color: "#ef9dcc",
     softColor: "rgba(239, 157, 204, 0.72)",
   },
+  "Market Rate West Wing": {
+    id: "Market Rate West Wing",
+    label: "Market Rate West Wing",
+    shortLabel: "West",
+    color: "#d4c2ec",
+    softColor: "rgba(212, 194, 236, 0.72)",
+  },
   "Market Rate North Wing": {
     id: "Market Rate North Wing",
     label: "Market Rate North Wing",

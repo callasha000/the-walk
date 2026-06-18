@@ -41,7 +41,7 @@ describe("ViewerToolbar", () => {
     expect(onLevelChange).toHaveBeenCalledWith(3);
   });
 
-  it("calls section selection when a section chip is clicked", () => {
+  it("calls zone selection when a zone chip is clicked", () => {
     const onZoneToggle = vi.fn();
 
     render(
@@ -86,12 +86,13 @@ describe("DashboardShell", () => {
     expect(screen.getByRole("heading", { name: modules[0].id })).toBeInTheDocument();
   });
 
-  it("renders section filter controls beside the tranche controls", () => {
+  it("renders zone filter controls beside the tranche controls", () => {
     render(<DashboardShell />);
 
-    expect(screen.getByText("Section filter")).toBeInTheDocument();
+    expect(screen.getByText("Zone filter")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Filter Residential Affordable" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Filter Market Rate South Wing" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filter Market Rate West Wing" })).toBeInTheDocument();
   });
 });
 
