@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { viewerCameraSettings } from "@/components/viewer/viewer-settings";
-import { registerSheetRect } from "@/data/geometry-calibration";
+import { registerSheetRect, sheetCalibration } from "@/data/geometry-calibration";
 import { moduleCoordinates } from "@/data/module-coordinates";
 import { modules } from "@/data/modules";
 import { shellMasses } from "@/data/shell-masses";
@@ -130,6 +130,19 @@ describe("transparent shell geometry", () => {
     expect(pavilion).toBeDefined();
     expect(pavilion?.color).toBe(podium?.color);
     expect(pavilion?.opacity).toBe(podium?.opacity);
+  });
+
+  it("extends the garage podium shell to about halfway through level 6", () => {
+    const podium = shellMasses.find((mass) => mass.name === "podium envelope");
+
+    expect(podium).toBeDefined();
+
+    const podiumTop = podium!.yCenter + podium!.height / 2;
+    const podiumBottom = podium!.yCenter - podium!.height / 2;
+
+    expect(podiumTop).toBeCloseTo((6 - 1) * sheetCalibration.levelHeight);
+    expect(podiumBottom).toBeLessThan(0);
+    expect(podium!.height).toBeGreaterThan(4);
   });
 });
 

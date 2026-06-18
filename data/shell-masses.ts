@@ -55,6 +55,10 @@ const twoLevelHeight = sheetCalibration.levelHeight + moduleHeight;
 const twoLevelYCenter = sheetCalibration.levelHeight / 2;
 const mergeTolerance = 6;
 const shellPadding = 2;
+const garagePodiumBottom = -0.34 - 0.55 / 2;
+const garagePodiumTop = (6 - 1) * sheetCalibration.levelHeight;
+const garagePodiumHeight = garagePodiumTop - garagePodiumBottom;
+const garagePodiumYCenter = (garagePodiumTop + garagePodiumBottom) / 2;
 const garageContextShellStyle = {
   color: "#6f7f7d",
   opacity: 0.14,
@@ -71,8 +75,8 @@ export const shellMasses: ShellMass[] = [
   {
     name: "podium envelope",
     rect: registerSheetRect(1, { xMin: 786.8, xMax: 1902.3, yMin: 1127.9, yMax: 1918.1 }),
-    height: 0.55,
-    yCenter: -0.34,
+    height: garagePodiumHeight,
+    yCenter: garagePodiumYCenter,
     ...garageContextShellStyle,
   },
   {
