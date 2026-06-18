@@ -1,4 +1,8 @@
-import { registerSheetRect, sheetCalibration } from "@/data/geometry-calibration";
+import {
+  registerSheetPoint,
+  registerSheetRect,
+  sheetCalibration,
+} from "@/data/geometry-calibration";
 import type { TrancheId } from "@/data/module-types";
 import { moduleCoordinates } from "@/data/module-coordinates";
 import { levels, modules } from "@/data/modules";
@@ -10,14 +14,32 @@ export type ShellRect = {
   yMax: number;
 };
 
-export type ShellMass = {
+export type ShellPoint = {
+  x: number;
+  y: number;
+};
+
+type ShellMassBase = {
   name: string;
-  rect: ShellRect;
   height: number;
   yCenter: number;
   color: string;
   opacity: number;
 };
+
+export type RectShellMass = ShellMassBase & {
+  rect: ShellRect;
+  footprint?: never;
+  outlineOnly?: false;
+};
+
+export type FootprintShellMass = ShellMassBase & {
+  footprint: ShellPoint[];
+  rect?: never;
+  outlineOnly: true;
+};
+
+export type ShellMass = RectShellMass | FootprintShellMass;
 
 type ShellFootprint = {
   zone: string;
@@ -29,6 +51,8 @@ type ShellFootprint = {
 const moduleHeight = 0.56;
 const residentialHeight = (levels.length - 1) * sheetCalibration.levelHeight + moduleHeight;
 const residentialYCenter = ((levels.length - 1) * sheetCalibration.levelHeight) / 2;
+const twoLevelHeight = sheetCalibration.levelHeight + moduleHeight;
+const twoLevelYCenter = sheetCalibration.levelHeight / 2;
 const mergeTolerance = 6;
 const shellPadding = 2;
 
@@ -47,6 +71,29 @@ export const shellMasses: ShellMass[] = [
     yCenter: -0.34,
     color: "#6f7f7d",
     opacity: 0.14,
+  },
+  {
+    name: "market rate pavilion not-in-scope outline",
+    footprint: registerSheetFootprint(1, [
+      { x: 1013.8, y: 821.7 },
+      { x: 1156.3, y: 821.7 },
+      { x: 1156.3, y: 769.4 },
+      { x: 1255.0, y: 769.4 },
+      { x: 1255.0, y: 761.2 },
+      { x: 1401.8, y: 761.2 },
+      { x: 1401.8, y: 956.6 },
+      { x: 1255.3, y: 977.7 },
+      { x: 1254.6, y: 977.9 },
+      { x: 1254.6, y: 953.9 },
+      { x: 1160.7, y: 953.9 },
+      { x: 1160.7, y: 957.3 },
+      { x: 1013.5, y: 977.7 },
+    ]),
+    height: twoLevelHeight,
+    yCenter: twoLevelYCenter,
+    color: "#d9e6ea",
+    opacity: 0,
+    outlineOnly: true,
   },
   ...buildResidentialShellMasses(),
 ];
@@ -98,6 +145,17 @@ function padRect(rect: ShellRect): ShellRect {
     yMin: rect.yMin - shellPadding,
     yMax: rect.yMax + shellPadding,
   };
+}
+
+function registerSheetFootprint(level: number, footprint: ShellPoint[]): ShellPoint[] {
+  return footprint.map((point) => {
+    const registeredPoint = registerSheetPoint(level, point.x, point.y);
+
+    return {
+      x: registeredPoint.sheetX,
+      y: registeredPoint.sheetY,
+    };
+  });
 }
 
 function mergeFootprints(footprints: ShellFootprint[]): ShellFootprint[] {

@@ -101,6 +101,24 @@ describe("transparent shell geometry", () => {
     expect(shellCovers("M378")).toBe(true);
     expect(shellCovers("M16")).toBe(true);
   });
+
+  it("includes the market rate pavilion not-in-scope outline for levels 1 and 2", () => {
+    const pavilion = shellMasses.find(
+      (mass) => mass.name === "market rate pavilion not-in-scope outline",
+    );
+
+    expect(pavilion).toBeDefined();
+    expect(pavilion?.outlineOnly).toBe(true);
+    expect(pavilion?.height).toBeCloseTo(1.28);
+    expect(pavilion?.yCenter).toBeCloseTo(0.36);
+    expect(pavilion?.footprint).toHaveLength(13);
+
+    const bounds = footprintBounds(pavilion!.footprint!);
+    expect(bounds.xMin).toBeCloseTo(1056.5, 0);
+    expect(bounds.xMax).toBeCloseTo(1444.8, 0);
+    expect(bounds.yMin).toBeCloseTo(761.2, 0);
+    expect(bounds.yMax).toBeCloseTo(977.9, 0);
+  });
 });
 
 function byTranche(modulesToFilter: BuildingModule[], tranche: TrancheId) {
@@ -150,10 +168,20 @@ function shellCovers(moduleId: string) {
 
   return shellMasses.some(
     (mass) =>
+      mass.rect &&
       mass.height > 1 &&
       mass.rect.xMin <= registeredRect.xMin &&
       mass.rect.xMax >= registeredRect.xMax &&
       mass.rect.yMin <= registeredRect.yMin &&
       mass.rect.yMax >= registeredRect.yMax,
   );
+}
+
+function footprintBounds(footprint: Array<{ x: number; y: number }>) {
+  return {
+    xMin: Math.min(...footprint.map((point) => point.x)),
+    xMax: Math.max(...footprint.map((point) => point.x)),
+    yMin: Math.min(...footprint.map((point) => point.y)),
+    yMax: Math.max(...footprint.map((point) => point.y)),
+  };
 }

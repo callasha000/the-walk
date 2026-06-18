@@ -1,20 +1,38 @@
 "use client";
 
-import { Box, Edges } from "@react-three/drei";
-import { sheetRectToModelMass } from "@/data/geometry-calibration";
-import { shellMasses, type ShellMass } from "@/data/shell-masses";
+import { Box, Edges, Line } from "@react-three/drei";
+import {
+  sheetPointToModelPosition,
+  sheetRectToModelMass,
+} from "@/data/geometry-calibration";
+import type { Vector3Tuple } from "@/data/module-types";
+import {
+  shellMasses,
+  type FootprintShellMass,
+  type RectShellMass,
+  type ShellMass,
+  type ShellPoint,
+} from "@/data/shell-masses";
 
 export function TransparentShell() {
   return (
     <group>
       {shellMasses.map((mass) => (
-        <ShellBox key={mass.name} mass={mass} />
+        <ShellElement key={mass.name} mass={mass} />
       ))}
     </group>
   );
 }
 
-function ShellBox({ mass }: { mass: ShellMass }) {
+function ShellElement({ mass }: { mass: ShellMass }) {
+  if (mass.outlineOnly) {
+    return <ShellFootprintOutline mass={mass} />;
+  }
+
+  return <ShellBox mass={mass} />;
+}
+
+function ShellBox({ mass }: { mass: RectShellMass }) {
   const modelMass = sheetRectToModelMass(mass.rect, mass.height, mass.yCenter);
 
   return (
@@ -35,4 +53,33 @@ function ShellBox({ mass }: { mass: ShellMass }) {
       <Edges color="#d9e6ea" lineWidth={1} />
     </Box>
   );
+}
+
+function ShellFootprintOutline({ mass }: { mass: FootprintShellMass }) {
+  const bottomY = mass.yCenter - mass.height / 2;
+  const topY = mass.yCenter + mass.height / 2;
+  const closedFootprint = [...mass.footprint, mass.footprint[0]];
+  const bottomLine = closedFootprint.map((point) => shellPointToModelPoint(point, bottomY));
+  const topLine = closedFootprint.map((point) => shellPointToModelPoint(point, topY));
+
+  return (
+    <group>
+      <Line points={bottomLine} color={mass.color} lineWidth={1.2} />
+      <Line points={topLine} color={mass.color} lineWidth={1.2} />
+      {mass.footprint.map((point) => (
+        <Line
+          key={`${point.x}:${point.y}`}
+          points={[shellPointToModelPoint(point, bottomY), shellPointToModelPoint(point, topY)]}
+          color={mass.color}
+          lineWidth={1.2}
+        />
+      ))}
+    </group>
+  );
+}
+
+function shellPointToModelPoint(point: ShellPoint, y: number): Vector3Tuple {
+  const [x, , z] = sheetPointToModelPosition(point.x, point.y, 1);
+
+  return [x, y, z];
 }
