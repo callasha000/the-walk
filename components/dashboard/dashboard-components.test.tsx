@@ -67,6 +67,38 @@ describe("ViewerToolbar", () => {
 
     expect(onZoneToggle).toHaveBeenCalledWith("Market Rate East Wing");
   });
+
+  it("keeps mobile filters collapsed until the filters button is opened", () => {
+    render(
+      <ViewerToolbar
+        activeLevel={1}
+        selectedTranches={[]}
+        selectedZones={[]}
+        showAllLevels={false}
+        showShell
+        showWireframe={false}
+        exploded={false}
+        onLevelChange={vi.fn()}
+        onTrancheToggle={vi.fn()}
+        onZoneToggle={vi.fn()}
+        onToggleAllLevels={vi.fn()}
+        onToggleShell={vi.fn()}
+        onToggleWireframe={vi.fn()}
+        onToggleExploded={vi.fn()}
+      />,
+    );
+
+    const filtersButton = screen.getByRole("button", { name: "Filters" });
+    const controls = document.getElementById("viewer-toolbar-controls");
+
+    expect(filtersButton).toHaveAttribute("aria-expanded", "false");
+    expect(controls).toHaveClass("hidden");
+
+    fireEvent.click(filtersButton);
+
+    expect(filtersButton).toHaveAttribute("aria-expanded", "true");
+    expect(controls).not.toHaveClass("hidden");
+  });
 });
 
 describe("DashboardShell", () => {
