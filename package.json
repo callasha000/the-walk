@@ -9,7 +9,8 @@
     "lint": "eslint . --max-warnings=0",
     "test": "vitest",
     "test:run": "vitest run --passWithNoTests",
-    "generate:pdf-assets": "python scripts/extract-pdf-assets.py"
+    "generate:pdf-assets": "python scripts/extract-pdf-assets.py",
+    "generate:module-coordinates": "python scripts/extract-module-coordinates.py"
   },
   "dependencies": {
     "@react-three/drei": "latest",

@@ -40,6 +40,7 @@ export function ModuleBox({
         args={module.size}
         position={position}
         onClick={handleSelect}
+        onPointerDown={handleSelect}
         onPointerOver={(event) => {
           event.stopPropagation();
           onHover(module);

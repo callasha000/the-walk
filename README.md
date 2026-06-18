@@ -6,6 +6,7 @@ Interactive Next.js dashboard for a source-backed, approximate 3D module visuali
 
 ```bash
 pnpm install
+pnpm generate:module-coordinates
 pnpm generate:pdf-assets
 pnpm dev
 ```
@@ -22,7 +23,7 @@ pnpm build
 
 Module metadata lives in `data/modules.ts`.
 
-The data uses real module IDs and unit codes extracted from `Module ID & Tranche Breakdown - Overall & By Level.pdf`. Levels, tranches, source pages, and unit codes are source-derived where practical. The `position` and `size` values are procedural coordinates for the dashboard visualization and are not architectural dimensions.
+The data uses real module IDs and unit codes extracted from `Module ID & Tranche Breakdown - Overall & By Level.pdf`. Levels, tranches, source pages, and unit codes are source-derived where practical. Module x/z positions are calibrated from PDF text-label coordinates generated into `data/module-coordinates.ts`.
 
 The level 6 source text layer contains one apparent OCR/text extraction omission where `M211` appears as `M21`; the data corrects it to `M211` based on the level 6 sequence and unit code.
 
@@ -56,7 +57,6 @@ Source-derived:
 Approximate:
 
 - 3D shell massing
-- module coordinates
 - module dimensions
 - garage/not-in-scope context massing
 

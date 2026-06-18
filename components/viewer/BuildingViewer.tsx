@@ -33,16 +33,16 @@ export function BuildingViewer({
       className="h-full w-full"
     >
       <color attach="background" args={["#11161a"]} />
-      <fog attach="fog" args={["#11161a", 12, 26]} />
+      <fog attach="fog" args={["#11161a", 18, 42]} />
 
-      <PerspectiveCamera makeDefault position={[8.5, 6.2, 8.8]} fov={42} />
+      <PerspectiveCamera makeDefault position={[10.5, 7.2, 15.5]} fov={44} />
       <OrbitControls
         makeDefault
         enableDamping
         dampingFactor={0.08}
-        maxDistance={18}
-        minDistance={4}
-        target={[0.5, 2.1, -0.5]}
+        maxDistance={30}
+        minDistance={5}
+        target={[0.2, 2.1, 0.3]}
       />
 
       <ambientLight intensity={0.65} />
@@ -67,7 +67,7 @@ export function BuildingViewer({
           ))}
         </group>
         <Grid
-          args={[13, 13]}
+          args={[14, 22]}
           cellSize={0.8}
           cellThickness={0.4}
           cellColor="#31404a"

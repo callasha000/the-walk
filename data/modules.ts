@@ -1,4 +1,6 @@
 import type { BuildingModule, TrancheId, Vector3Tuple } from "@/data/module-types";
+import { sheetPointToModelPosition } from "./geometry-calibration";
+import { moduleCoordinates } from "./module-coordinates";
 
 type LayoutKind = "east-edge" | "north-wing" | "vertical-wing" | "west-wing";
 
@@ -9,8 +11,6 @@ type SourceGroup = {
   layout: LayoutKind;
   source: string;
 };
-
-const levelHeight = 0.72;
 
 const sourceGroups: SourceGroup[] = [
   { level: 1, tranche: 4, buildingZone: "Market Rate East Edge", layout: "east-edge", source: "M9:CFA1M-H2 M1:DB1M-LH2 M3:CA1M-E3 M2:DA1M-LH1 M4:CB1M-C1 M5:CC1M-BKR1 M6:CD1M-1BKL M7:CE1M-A1 M8:CF1M-A2 M10:CG1M-2RB M11:CH1M-K9 M12:CI1M-2BKL M13:CJ1M-BKR2 M14:CK1M-1BKL M15:CL1M-C2 M16:CM1M-E4" },
@@ -53,9 +53,15 @@ function parseSource(source: string): Array<{ id: string; unitCode: string }> {
 function positionFor(
   layout: LayoutKind,
   level: number,
+  id: string,
   index: number,
 ): Vector3Tuple {
-  const y = (level - 1) * levelHeight;
+  const coordinate = moduleCoordinates[id];
+  if (coordinate) {
+    return sheetPointToModelPosition(coordinate.sheetX, coordinate.sheetY, level);
+  }
+
+  const y = sheetPointToModelPosition(1360, 1000, level)[1];
 
   if (layout === "west-wing") {
     return [-5.6 + index * 0.72, y, 1.85];
@@ -76,10 +82,10 @@ function positionFor(
 
 function sizeFor(layout: LayoutKind): Vector3Tuple {
   if (layout === "vertical-wing" || layout === "east-edge") {
-    return [0.64, 0.56, 0.58];
+    return [0.46, 0.56, 0.5];
   }
 
-  return [0.64, 0.56, 0.92];
+  return [0.46, 0.56, 0.72];
 }
 
 function notesFor(id: string): string {
@@ -96,7 +102,7 @@ export const modules: BuildingModule[] = sourceGroups.flatMap((group) =>
     level: group.level,
     tranche: group.tranche,
     buildingZone: group.buildingZone,
-    position: positionFor(group.layout, group.level, index),
+    position: positionFor(group.layout, group.level, module.id, index),
     size: sizeFor(group.layout),
     sourcePage: group.level + 1,
     notes: notesFor(module.id),
