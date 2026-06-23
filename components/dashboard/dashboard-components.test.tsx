@@ -204,4 +204,16 @@ describe("UnitDetailPanel", () => {
     expect(screen.getByText(modules[0].unitCode)).toBeInTheDocument();
     expect(screen.getByText(/Geometry is approximate/)).toBeInTheDocument();
   });
+
+  it("renders master matrix metadata for the selected module", () => {
+    render(<UnitDetailPanel module={modules[0]} />);
+
+    expect(screen.getByText("Matrix data")).toBeInTheDocument();
+    expect(screen.getByText("CFA1M-H2")).toBeInTheDocument();
+    expect(screen.getByText("11'-7\" x 12'-9\" x 11'-1\"")).toBeInTheDocument();
+    expect(screen.getByText("10,725 lb")).toBeInTheDocument();
+    expect(screen.getByText("West Modular")).toBeInTheDocument();
+    expect(screen.getByText("Line 1 / Seq 352")).toBeInTheDocument();
+    expect(screen.getByText("Mar 1, 2027")).toBeInTheDocument();
+  });
 });

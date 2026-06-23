@@ -61,6 +61,43 @@ export function UnitDetailPanel({ module }: UnitDetailPanelProps) {
         <DetailItem label="Source page" value={`Page ${module.sourcePage}`} />
       </dl>
 
+      <section className="mt-4">
+        <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100">
+          Matrix data
+        </h3>
+        <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
+          <DetailItem
+            className="col-span-2"
+            label="Dimensions"
+            value={module.matrix.dimension ?? "Not listed"}
+          />
+          <DetailItem
+            label="Weight"
+            value={formatWeight(module.matrix.estimatedWeightLb)}
+          />
+          <DetailItem
+            label="Fabricator"
+            value={module.matrix.assignedFabricator ?? "Not assigned"}
+          />
+          <DetailItem
+            label="Production"
+            value={formatProduction(module.matrix)}
+          />
+          <DetailItem
+            label="Oversized"
+            value={module.matrix.oversized ? "Yes" : "No"}
+          />
+          <DetailItem
+            label="Ship date"
+            value={formatDate(module.matrix.shipping.shippingDate)}
+          />
+          <DetailItem
+            label="Arrival"
+            value={formatDate(module.matrix.shipping.arrivalDate)}
+          />
+        </dl>
+      </section>
+
       <div className="mt-3 rounded-md border border-white/10 bg-white/[0.04] p-3 text-xs leading-5 text-slate-300">
         Geometry is approximate from PDF/module schedule. The 2D preview shows
         the full source level sheet because exact crop coordinates are not
@@ -72,13 +109,75 @@ export function UnitDetailPanel({ module }: UnitDetailPanelProps) {
   );
 }
 
-function DetailItem({ label, value }: { label: string; value: string }) {
+function DetailItem({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
+  const itemClassName = [
+    "rounded-md border border-white/10 bg-white/[0.04] p-2.5",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className="rounded-md border border-white/10 bg-white/[0.04] p-2.5">
+    <div className={itemClassName}>
       <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
         {label}
       </dt>
       <dd className="mt-1 break-words text-sm text-white">{value}</dd>
     </div>
   );
+}
+
+function formatWeight(value: number | null): string {
+  if (value === null) {
+    return "Not listed";
+  }
+
+  return `${value.toLocaleString("en-US")} lb`;
+}
+
+function formatProduction(matrix: BuildingModule["matrix"]): string {
+  if (matrix.productionLine === null && matrix.productionSequence === null) {
+    return "Not listed";
+  }
+
+  if (matrix.productionLine !== null && matrix.productionSequence !== null) {
+    return `Line ${matrix.productionLine} / Seq ${matrix.productionSequence}`;
+  }
+
+  if (matrix.productionLine !== null) {
+    return `Line ${matrix.productionLine}`;
+  }
+
+  return `Seq ${matrix.productionSequence}`;
+}
+
+function formatDate(value: string | null): string {
+  if (!value) {
+    return "Not listed";
+  }
+
+  if (value === "TBD") {
+    return value;
+  }
+
+  const date = new Date(`${value}T00:00:00Z`);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+    year: "numeric",
+  }).format(date);
 }

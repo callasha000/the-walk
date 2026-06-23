@@ -10,6 +10,7 @@ import {
   sheetSizeToModelSize,
 } from "./geometry-calibration";
 import { moduleCoordinates } from "./module-coordinates";
+import { moduleMatrixById } from "./module-matrix";
 
 type LayoutKind = "east-edge" | "north-wing" | "vertical-wing" | "west-wing";
 
@@ -123,6 +124,16 @@ function notesFor(id: string): string {
   return "Source-derived ID/unit, position, and footprint from Module ID PDF.";
 }
 
+function matrixFor(id: string) {
+  const matrix = moduleMatrixById[id];
+
+  if (!matrix) {
+    throw new Error(`Missing master matrix data for ${id}.`);
+  }
+
+  return matrix;
+}
+
 function zoneForModule(tranche: TrancheId, id: string): BuildingZone {
   if (southWingExceptionModuleIds.has(id) || tranche === 3) {
     return "Market Rate South Wing";
@@ -155,6 +166,7 @@ export const modules: BuildingModule[] = sourceGroups.flatMap((group) =>
     level: group.level,
     tranche: group.tranche,
     buildingZone: zoneForModule(group.tranche, module.id),
+    matrix: matrixFor(module.id),
     position: positionFor(group.layout, group.level, module.id, index),
     size: sizeFor(group.layout, module.id),
     sourcePage: group.level + 1,

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { moduleMatrixById } from "@/data/module-matrix";
 import type { BuildingModule } from "@/data/module-types";
 import { modules as projectModules } from "@/data/modules";
 import { filterModules, getPdfPageImagePath, getTrancheMeta } from "./module-helpers";
@@ -10,6 +11,7 @@ const modules: BuildingModule[] = [
     level: 1,
     tranche: 4,
     buildingZone: "Market Rate South Wing",
+    matrix: moduleMatrixById.M1!,
     position: [0, 0, 0],
     size: [1, 1, 1],
     sourcePage: 2,
@@ -21,6 +23,7 @@ const modules: BuildingModule[] = [
     level: 1,
     tranche: 2,
     buildingZone: "Market Rate East Wing",
+    matrix: moduleMatrixById.M254!,
     position: [1, 0, 0],
     size: [1, 1, 1],
     sourcePage: 2,
@@ -32,6 +35,7 @@ const modules: BuildingModule[] = [
     level: 2,
     tranche: 1,
     buildingZone: "Market Rate North Wing",
+    matrix: moduleMatrixById.M118!,
     position: [2, 0, 0],
     size: [1, 1, 1],
     sourcePage: 3,
@@ -43,6 +47,7 @@ const modules: BuildingModule[] = [
     level: 7,
     tranche: 1,
     buildingZone: "Market Rate North Wing",
+    matrix: moduleMatrixById.M238!,
     position: [3, 0, 0],
     size: [0.4, 1, 1.3],
     sourcePage: 8,
@@ -54,6 +59,7 @@ const modules: BuildingModule[] = [
     level: 7,
     tranche: 1,
     buildingZone: "Market Rate West Wing",
+    matrix: moduleMatrixById.M228!,
     position: [4, 0, 0],
     size: [1.3, 1, 0.4],
     sourcePage: 8,
@@ -123,10 +129,36 @@ describe("project module data", () => {
       expect(buildingModule.level).toBeLessThanOrEqual(7);
       expect([1, 2, 3, 4]).toContain(buildingModule.tranche);
       expect(buildingModule.buildingZone.length).toBeGreaterThan(0);
+      expect(buildingModule.matrix.module).toBe(buildingModule.id);
       expect(buildingModule.position).toHaveLength(3);
       expect(buildingModule.size).toHaveLength(3);
       expect(buildingModule.sourcePage).toBe(buildingModule.level + 1);
     }
+  });
+
+  it("joins normalized master matrix metadata to every module", () => {
+    for (const buildingModule of projectModules) {
+      expect(buildingModule.matrix).toBeDefined();
+    }
+
+    const matrix = projectModules.find((module) => module.id === "M9")?.matrix;
+
+    expect(matrix).toMatchObject({
+      module: "M9",
+      moduleSerialNumber: "CFA1M-H2",
+      dimension: "11'-7\" x 12'-9\" x 11'-1\"",
+      estimatedWeightLb: 10725,
+      assignedFabricator: "West Modular",
+      productionLine: 1,
+      productionSequence: 352,
+      shipping: {
+        shippingDate: "2027-03-01",
+        arrivalDate: "2027-03-02",
+      },
+      yard: {
+        inspectionDate: "2027-03-03",
+      },
+    });
   });
 
   it("includes known PDF-derived module IDs", () => {
