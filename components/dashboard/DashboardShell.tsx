@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { clsx } from "clsx";
-import { Cuboid, Database, Maximize2, X } from "lucide-react";
+import { Cuboid, Database, X } from "lucide-react";
 import { modules } from "@/data/modules";
 import type {
   BuildingModule,
@@ -31,6 +31,7 @@ const BuildingViewer = dynamic(
 
 const DETAIL_PANEL_MIN_WIDTH = 390;
 const DETAIL_PANEL_MAX_WIDTH = 780;
+const MOBILE_SHEET_CLOSE_DRAG_DISTANCE = 72;
 
 export function DashboardShell() {
   const [activeLevel, setActiveLevel] = useState(1);
@@ -255,7 +256,7 @@ export function DashboardShell() {
   return (
     <main className="min-h-screen bg-[#101214] text-white lg:h-screen lg:overflow-hidden">
       <div
-        className="grid min-h-screen grid-cols-1 gap-3 p-3 lg:h-screen lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_12px_var(--detail-panel-width)] lg:grid-rows-[auto_1fr]"
+        className="grid min-h-screen content-start grid-cols-1 gap-3 p-3 lg:h-screen lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_12px_var(--detail-panel-width)] lg:grid-rows-[auto_1fr]"
         style={
           {
             "--detail-panel-width": `${detailPanelWidth}px`,
@@ -275,12 +276,14 @@ export function DashboardShell() {
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
               <Metric icon={<Cuboid size={15} />} label="Visible" value={visibleModules.length} />
               <Metric icon={<Database size={15} />} label="Source modules" value={modules.length} />
-              <Metric icon={<Maximize2 size={15} />} label="Levels" value={7} />
             </div>
           </div>
         </header>
 
-        <section className="relative h-[560px] min-h-[420px] overflow-hidden rounded-lg border border-white/10 bg-[#11161a] shadow-glow lg:h-auto lg:min-h-0">
+        <section
+          data-testid="building-viewer-shell"
+          className="relative h-[calc(100dvh-10rem)] min-h-[560px] overflow-hidden rounded-lg border border-white/10 bg-[#11161a] shadow-glow lg:h-auto lg:min-h-0"
+        >
           <div className="absolute left-3 right-3 top-3 z-10">
             <ViewerToolbar
               activeLevel={activeLevel}
@@ -371,6 +374,103 @@ function MobileModuleBottomSheet({
   visible: boolean;
   onClose: () => void;
 }) {
+  const [dragOffsetY, setDragOffsetY] = useState(0);
+  const [isSheetMouseDragging, setIsSheetMouseDragging] = useState(false);
+  const sheetDragStateRef = useRef({
+    currentOffsetY: 0,
+    isDragging: false,
+    startY: 0,
+  });
+
+  const startSheetDrag = useCallback((clientY: number) => {
+    sheetDragStateRef.current = {
+      currentOffsetY: 0,
+      isDragging: true,
+      startY: clientY,
+    };
+    setDragOffsetY(0);
+  }, []);
+
+  const updateSheetDrag = useCallback((clientY: number) => {
+    if (!sheetDragStateRef.current.isDragging) {
+      return;
+    }
+
+    const offsetY = Math.max(0, clientY - sheetDragStateRef.current.startY);
+    sheetDragStateRef.current.currentOffsetY = offsetY;
+    setDragOffsetY(offsetY);
+  }, []);
+
+  const finishSheetDrag = useCallback(() => {
+    if (!sheetDragStateRef.current.isDragging) {
+      return;
+    }
+
+    const shouldClose =
+      sheetDragStateRef.current.currentOffsetY >=
+      MOBILE_SHEET_CLOSE_DRAG_DISTANCE;
+
+    sheetDragStateRef.current.isDragging = false;
+    setDragOffsetY(0);
+
+    if (shouldClose) {
+      onClose();
+    }
+  }, [onClose]);
+
+  const handleSheetPointerDown = (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => {
+    startSheetDrag(event.clientY);
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+
+  const handleSheetPointerMove = (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => {
+    updateSheetDrag(event.clientY);
+  };
+
+  const stopSheetPointerDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!sheetDragStateRef.current.isDragging) {
+      return;
+    }
+
+    setIsSheetMouseDragging(false);
+    finishSheetDrag();
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+  };
+
+  const handleSheetMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    startSheetDrag(event.clientY);
+    setIsSheetMouseDragging(true);
+  };
+
+  useEffect(() => {
+    if (!isSheetMouseDragging) {
+      return undefined;
+    }
+
+    const handleMouseMove = (event: MouseEvent) => {
+      event.preventDefault();
+      updateSheetDrag(event.clientY);
+    };
+
+    const handleMouseUp = () => {
+      setIsSheetMouseDragging(false);
+      finishSheetDrag();
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [finishSheetDrag, isSheetMouseDragging, updateSheetDrag]);
+
   if (!mounted) {
     return null;
   }
@@ -388,26 +488,45 @@ function MobileModuleBottomSheet({
           visible ? "opacity-100" : "opacity-0",
         )}
       />
-      <div className="relative z-10 w-full">
+      <div className="relative z-10 w-full pt-14">
         <button
           type="button"
           aria-label="Close module details"
+          data-testid="mobile-sheet-close-button"
           onClick={onClose}
           className={clsx(
-            "absolute -top-14 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#12171b]/95 text-slate-200 shadow-xl shadow-black/30 backdrop-blur transition-all duration-[520ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-white/12",
-            visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
+            "absolute right-4 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#12171b]/95 text-slate-200 shadow-xl shadow-black/30 backdrop-blur transition-opacity duration-[520ms] hover:bg-white/12",
+            visible ? "opacity-100" : "pointer-events-none opacity-0",
           )}
         >
           <X size={16} />
         </button>
         <div
           className={clsx(
-            "max-h-[86vh] overflow-hidden rounded-t-xl border border-white/10 bg-[#12171b] p-3 shadow-2xl transition-transform duration-[520ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
-            visible ? "translate-y-0" : "translate-y-full",
+            "max-h-[82dvh] overflow-hidden rounded-t-xl border border-white/10 bg-[#12171b] shadow-2xl ease-[cubic-bezier(0.22,1,0.36,1)]",
+            dragOffsetY > 0
+              ? "transition-none"
+              : "transition-transform duration-[520ms]",
           )}
+          style={{
+            transform: visible ? `translateY(${dragOffsetY}px)` : "translateY(100%)",
+          }}
         >
-          <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/25" />
-          <div className="max-h-[calc(86vh-2.75rem)] overflow-y-auto pt-1">
+          <div
+            data-testid="mobile-sheet-top-bar"
+            onMouseDown={handleSheetMouseDown}
+            onPointerCancel={stopSheetPointerDrag}
+            onPointerDown={handleSheetPointerDown}
+            onPointerMove={handleSheetPointerMove}
+            onPointerUp={stopSheetPointerDrag}
+            className="relative flex h-12 touch-none select-none items-center justify-center border-b border-white/10 px-4"
+          >
+            <span
+              data-testid="mobile-sheet-drag-handle"
+              className="h-1 w-16 rounded-full bg-white/25"
+            />
+          </div>
+          <div className="max-h-[calc(82dvh-3rem)] overflow-y-auto p-3 pt-1">
             <UnitDetailPanel module={module} />
           </div>
         </div>

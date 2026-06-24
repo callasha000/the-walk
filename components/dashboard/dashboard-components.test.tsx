@@ -1,4 +1,9 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { modules } from "@/data/modules";
 import { DashboardShell } from "./DashboardShell";
@@ -168,6 +173,29 @@ describe("DashboardShell", () => {
     expect(screen.getByRole("button", { name: "Filter Market Rate West Wing" })).toBeInTheDocument();
   });
 
+  it("omits the levels metric card from the dashboard header", () => {
+    render(<DashboardShell />);
+
+    expect(screen.getByText("Visible")).toBeInTheDocument();
+    expect(screen.getByText("Source modules")).toBeInTheDocument();
+    expect(screen.queryByText("Levels")).not.toBeInTheDocument();
+  });
+
+  it("keeps the mobile dashboard grid content packed at the top", () => {
+    render(<DashboardShell />);
+
+    expect(document.querySelector("main > div")).toHaveClass("content-start");
+  });
+
+  it("sizes the mobile 3D viewer to use the remaining viewport height", () => {
+    render(<DashboardShell />);
+
+    expect(screen.getByTestId("building-viewer-shell")).toHaveClass(
+      "h-[calc(100dvh-10rem)]",
+      "min-h-[560px]",
+    );
+  });
+
   it("opens selected module details in a mobile bottom sheet from the view button", async () => {
     render(<DashboardShell />);
 
@@ -178,6 +206,56 @@ describe("DashboardShell", () => {
     expect(await screen.findByRole("dialog", { name: "Selected module details" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Close module details" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Selected module details" })).not.toBeInTheDocument();
+    });
+  });
+
+  it("positions the mobile bottom sheet close button above the sheet", async () => {
+    render(<DashboardShell />);
+
+    fireEvent.click(screen.getByRole("button", { name: `View ${modules[0].id} details` }));
+
+    expect(await screen.findByRole("dialog", { name: "Selected module details" })).toBeInTheDocument();
+
+    const topBar = screen.getByTestId("mobile-sheet-top-bar");
+    const closeButton = screen.getByTestId("mobile-sheet-close-button");
+
+    expect(topBar).not.toContainElement(closeButton);
+    expect(closeButton).toHaveClass("top-3");
+  });
+
+  it("closes the mobile bottom sheet when the handle is swiped down", async () => {
+    render(<DashboardShell />);
+
+    fireEvent.click(screen.getByRole("button", { name: `View ${modules[0].id} details` }));
+
+    expect(await screen.findByRole("dialog", { name: "Selected module details" })).toBeInTheDocument();
+
+    const topBar = screen.getByTestId("mobile-sheet-top-bar");
+
+    fireEvent.pointerDown(topBar, { clientY: 120, pointerId: 1 });
+    fireEvent.pointerMove(topBar, { clientY: 230, pointerId: 1 });
+    fireEvent.pointerUp(topBar, { clientY: 230, pointerId: 1 });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Selected module details" })).not.toBeInTheDocument();
+    });
+  });
+
+  it("closes the mobile bottom sheet when the handle is dragged down with a mouse", async () => {
+    render(<DashboardShell />);
+
+    fireEvent.click(screen.getByRole("button", { name: `View ${modules[0].id} details` }));
+
+    expect(await screen.findByRole("dialog", { name: "Selected module details" })).toBeInTheDocument();
+
+    const topBar = screen.getByTestId("mobile-sheet-top-bar");
+
+    fireEvent.mouseDown(topBar, { clientY: 120 });
+    fireEvent.mouseMove(window, { clientY: 230 });
+    fireEvent.mouseUp(window);
 
     await waitFor(() => {
       expect(screen.queryByRole("dialog", { name: "Selected module details" })).not.toBeInTheDocument();
