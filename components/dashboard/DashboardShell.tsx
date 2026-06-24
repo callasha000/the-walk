@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { clsx } from "clsx";
 import { Cuboid, Database, Maximize2, X } from "lucide-react";
 import { modules } from "@/data/modules";
@@ -29,6 +29,9 @@ const BuildingViewer = dynamic(
   },
 );
 
+const DETAIL_PANEL_MIN_WIDTH = 390;
+const DETAIL_PANEL_MAX_WIDTH = 780;
+
 export function DashboardShell() {
   const [activeLevel, setActiveLevel] = useState(1);
   const [selectedTranches, setSelectedTranches] = useState<TrancheId[]>([]);
@@ -42,7 +45,16 @@ export function DashboardShell() {
   );
   const [mobileDetailMounted, setMobileDetailMounted] = useState(false);
   const [mobileDetailVisible, setMobileDetailVisible] = useState(false);
+  const [detailPanelWidth, setDetailPanelWidth] = useState(
+    DETAIL_PANEL_MIN_WIDTH,
+  );
+  const [isDetailPanelResizing, setIsDetailPanelResizing] = useState(false);
   const mobileDetailTimerRef = useRef<number | null>(null);
+  const detailResizeStateRef = useRef({
+    isDragging: false,
+    startWidth: DETAIL_PANEL_MIN_WIDTH,
+    startX: 0,
+  });
 
   const visibleModules = useMemo(
     () =>
@@ -93,6 +105,96 @@ export function DashboardShell() {
     setActiveLevel(module.level);
   };
 
+  const startDetailResize = useCallback(
+    (clientX: number) => {
+      detailResizeStateRef.current = {
+        isDragging: true,
+        startWidth: detailPanelWidth,
+        startX: clientX,
+      };
+      setIsDetailPanelResizing(true);
+    },
+    [detailPanelWidth],
+  );
+
+  const updateDetailResize = useCallback((clientX: number) => {
+    if (!detailResizeStateRef.current.isDragging) {
+      return;
+    }
+
+    const deltaX = detailResizeStateRef.current.startX - clientX;
+    setDetailPanelWidth(
+      clampDetailPanelWidth(detailResizeStateRef.current.startWidth + deltaX),
+    );
+  }, []);
+
+  const finishDetailResize = useCallback(() => {
+    if (!detailResizeStateRef.current.isDragging) {
+      return;
+    }
+
+    detailResizeStateRef.current.isDragging = false;
+    setIsDetailPanelResizing(false);
+  }, []);
+
+  const handleDetailResizePointerDown = (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => {
+    startDetailResize(event.clientX);
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+
+  const handleDetailResizePointerMove = (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => {
+    if (!detailResizeStateRef.current.isDragging) {
+      return;
+    }
+
+    event.preventDefault();
+    updateDetailResize(event.clientX);
+  };
+
+  const stopDetailResize = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!detailResizeStateRef.current.isDragging) {
+      return;
+    }
+
+    finishDetailResize();
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+  };
+
+  const handleDetailResizeMouseDown = (
+    event: React.MouseEvent<HTMLDivElement>,
+  ) => {
+    event.preventDefault();
+    startDetailResize(event.clientX);
+  };
+
+  const handleDetailResizeKeyDown = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+  ) => {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      setDetailPanelWidth((width) => clampDetailPanelWidth(width + 30));
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      setDetailPanelWidth((width) => clampDetailPanelWidth(width - 30));
+    }
+
+    if (event.key === "Home") {
+      event.preventDefault();
+      setDetailPanelWidth(DETAIL_PANEL_MIN_WIDTH);
+    }
+
+    if (event.key === "End") {
+      event.preventDefault();
+      setDetailPanelWidth(DETAIL_PANEL_MAX_WIDTH);
+    }
+  };
+
   const clearMobileDetailTimer = () => {
     if (mobileDetailTimerRef.current !== null) {
       window.clearTimeout(mobileDetailTimerRef.current);
@@ -127,10 +229,40 @@ export function DashboardShell() {
     [],
   );
 
+  useEffect(() => {
+    if (!isDetailPanelResizing) {
+      return undefined;
+    }
+
+    const handleMouseMove = (event: MouseEvent) => {
+      event.preventDefault();
+      updateDetailResize(event.clientX);
+    };
+
+    const handleMouseUp = () => {
+      finishDetailResize();
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [finishDetailResize, isDetailPanelResizing, updateDetailResize]);
+
   return (
     <main className="min-h-screen bg-[#101214] text-white lg:h-screen lg:overflow-hidden">
-      <div className="grid min-h-screen grid-cols-1 gap-3 p-3 lg:h-screen lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_390px] lg:grid-rows-[auto_1fr]">
-        <header className="rounded-lg border border-white/10 bg-black/25 px-4 py-3 shadow-glow backdrop-blur-xl lg:col-span-2">
+      <div
+        className="grid min-h-screen grid-cols-1 gap-3 p-3 lg:h-screen lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_12px_var(--detail-panel-width)] lg:grid-rows-[auto_1fr]"
+        style={
+          {
+            "--detail-panel-width": `${detailPanelWidth}px`,
+          } as React.CSSProperties
+        }
+      >
+        <header className="rounded-lg border border-white/10 bg-black/25 px-4 py-3 shadow-glow backdrop-blur-xl lg:col-span-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100">
@@ -182,7 +314,31 @@ export function DashboardShell() {
           />
         </section>
 
-        <aside className="hidden lg:block lg:min-h-0">
+        <div
+          role="separator"
+          aria-label="Resize selected module panel"
+          aria-orientation="vertical"
+          aria-valuemin={DETAIL_PANEL_MIN_WIDTH}
+          aria-valuemax={DETAIL_PANEL_MAX_WIDTH}
+          aria-valuenow={detailPanelWidth}
+          tabIndex={0}
+          onKeyDown={handleDetailResizeKeyDown}
+          onMouseDown={handleDetailResizeMouseDown}
+          onPointerDown={handleDetailResizePointerDown}
+          onPointerMove={handleDetailResizePointerMove}
+          onPointerUp={stopDetailResize}
+          onPointerCancel={stopDetailResize}
+          className={clsx(
+            "group hidden h-full touch-none select-none items-center justify-center rounded-lg outline-none transition focus-visible:bg-white/[0.06] lg:flex",
+            isDetailPanelResizing
+              ? "cursor-col-resize bg-white/[0.06]"
+              : "cursor-col-resize hover:bg-white/[0.04]",
+          )}
+        >
+          <span className="h-16 w-1 rounded-full bg-white/15 transition group-hover:bg-cyan-100/50 group-focus-visible:bg-cyan-100/60" />
+        </div>
+
+        <aside className="hidden min-w-0 lg:block lg:min-h-0">
           <UnitDetailPanel module={selectedModule} />
         </aside>
       </div>
@@ -194,6 +350,13 @@ export function DashboardShell() {
         onClose={handleCloseMobileDetail}
       />
     </main>
+  );
+}
+
+function clampDetailPanelWidth(width: number) {
+  return Math.min(
+    DETAIL_PANEL_MAX_WIDTH,
+    Math.max(DETAIL_PANEL_MIN_WIDTH, Math.round(width)),
   );
 }
 

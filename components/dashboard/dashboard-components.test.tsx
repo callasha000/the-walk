@@ -183,6 +183,36 @@ describe("DashboardShell", () => {
       expect(screen.queryByRole("dialog", { name: "Selected module details" })).not.toBeInTheDocument();
     });
   });
+
+  it("widens the selected module panel from the desktop resize separator", () => {
+    render(<DashboardShell />);
+
+    const resizer = screen.getByRole("separator", {
+      name: "Resize selected module panel",
+    });
+
+    expect(resizer).toHaveAttribute("aria-valuenow", "390");
+
+    fireEvent.pointerDown(resizer, { clientX: 500, pointerId: 1 });
+    fireEvent.pointerMove(resizer, { clientX: 300, pointerId: 1 });
+    fireEvent.pointerUp(resizer, { pointerId: 1 });
+
+    expect(resizer).toHaveAttribute("aria-valuenow", "590");
+  });
+
+  it("continues resizing the selected module panel during a mouse drag", () => {
+    render(<DashboardShell />);
+
+    const resizer = screen.getByRole("separator", {
+      name: "Resize selected module panel",
+    });
+
+    fireEvent.mouseDown(resizer, { clientX: 500 });
+    fireEvent.mouseMove(window, { clientX: 260 });
+    fireEvent.mouseUp(window);
+
+    expect(resizer).toHaveAttribute("aria-valuenow", "630");
+  });
 });
 
 describe("TrancheLegend", () => {
@@ -218,5 +248,78 @@ describe("UnitDetailPanel", () => {
     expect(screen.getByText("Line 1 / Seq 352")).toBeInTheDocument();
     expect(screen.getByText("Mar 1, 2027")).toBeInTheDocument();
     expect(screen.getByText("Zone").closest("div")).toHaveClass("col-span-2");
+  });
+
+  it("renders a selected module schedule timeline from the master matrix", () => {
+    render(<UnitDetailPanel module={modules[0]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
+
+    expect(
+      screen.queryByAltText(`Source PDF page for ${modules[0].id}`),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Schedule timeline")).not.toBeInTheDocument();
+    expect(screen.queryByText("By module")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(`${modules[0].id} schedule from master matrix dates`),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Today")).toBeInTheDocument();
+    expect(screen.getByText("Chassis shop drawings")).toBeInTheDocument();
+    expect(screen.getByText("Module shop drawings")).toBeInTheDocument();
+    expect(screen.getByText("Chassis fabrication")).toBeInTheDocument();
+    expect(screen.getByText("Module fabrication")).toBeInTheDocument();
+    expect(screen.getByText("Shipping")).toBeInTheDocument();
+    expect(screen.getByText("Yard inspection")).toBeInTheDocument();
+    expect(screen.getByText(/Jul 16, 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Mar 1, 2027/)).toBeInTheDocument();
+    expect(screen.queryByText("Geometry is approximate from PDF/module schedule.")).not.toBeInTheDocument();
+    expect(screen.getByTestId("schedule-timeline-scroll")).toHaveClass(
+      "overflow-x-auto",
+    );
+  });
+
+  it("keeps the phase column visually fixed outside the horizontal scroller", () => {
+    render(<UnitDetailPanel module={modules[0]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
+
+    const phaseColumn = screen.getByTestId("schedule-phase-column");
+    const timeline = screen.getByTestId("schedule-timeline-scroll");
+
+    expect(timeline).not.toContainElement(phaseColumn);
+    expect(phaseColumn).toHaveClass("border-r", "bg-white/[0.03]");
+    expect(screen.getByTestId("schedule-phase-header")).toHaveClass(
+      "bg-white/[0.03]",
+    );
+    expect(screen.getByTestId("schedule-phase-Chassis shop drawings")).toHaveClass(
+      "bg-white/[0.03]",
+    );
+  });
+
+  it("supports click and drag horizontal scrolling in the schedule timeline", () => {
+    render(<UnitDetailPanel module={modules[0]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
+
+    const timeline = screen.getByTestId("schedule-timeline-scroll");
+    timeline.scrollLeft = 300;
+
+    fireEvent.pointerDown(timeline, { clientX: 100, pointerId: 1 });
+    fireEvent.pointerMove(timeline, { clientX: 150, pointerId: 1 });
+    fireEvent.pointerUp(timeline, { pointerId: 1 });
+
+    expect(timeline.scrollLeft).toBe(250);
+  });
+
+  it("keeps the details and schedule tabs above the PDF preview", () => {
+    render(<UnitDetailPanel module={modules[0]} />);
+
+    const scheduleButton = screen.getByRole("button", { name: "Schedule" });
+    const pdfPreview = screen.getByAltText(`Source PDF page for ${modules[0].id}`);
+
+    expect(
+      scheduleButton.compareDocumentPosition(pdfPreview) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 });
