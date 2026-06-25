@@ -6,6 +6,7 @@ import {
 } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { modules } from "@/data/modules";
+import { BuildAnimationPlayer } from "./BuildAnimationPlayer";
 import { DashboardShell } from "./DashboardShell";
 import { TrancheLegend } from "./TrancheLegend";
 import { UnitDetailPanel } from "./UnitDetailPanel";
@@ -144,6 +145,24 @@ describe("ViewerToolbar", () => {
 });
 
 describe("DashboardShell", () => {
+  it("opens a fullscreen build sequence player from the play button", () => {
+    render(<DashboardShell />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Play build sequence" }));
+
+    expect(
+      screen.getByRole("dialog", { name: "Build sequence player" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("1 day / sec")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start build animation" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Close build sequence player" }));
+
+    expect(
+      screen.queryByRole("dialog", { name: "Build sequence player" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("starts with wireframe turned off for smoother first load", () => {
     render(<DashboardShell />);
 
@@ -290,6 +309,40 @@ describe("DashboardShell", () => {
     fireEvent.mouseUp(window);
 
     expect(resizer).toHaveAttribute("aria-valuenow", "630");
+  });
+});
+
+describe("BuildAnimationPlayer", () => {
+  it("provides video-style playback controls for the build animation", () => {
+    render(<BuildAnimationPlayer modules={modules.slice(0, 4)} onClose={vi.fn()} />);
+
+    const slider = screen.getByRole("slider", {
+      name: "Build sequence timeline",
+    });
+
+    expect(screen.getByRole("button", { name: "Start build animation" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Restart build animation" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Set playback speed to 4x" })).toBeInTheDocument();
+    expect(slider).toHaveAttribute("min", "0");
+
+    fireEvent.click(screen.getByRole("button", { name: "Start build animation" }));
+
+    expect(screen.getByRole("button", { name: "Pause build animation" })).toBeInTheDocument();
+  });
+
+  it("fades in the A301 reference rendering at the end of playback", () => {
+    render(<BuildAnimationPlayer modules={modules.slice(0, 4)} onClose={vi.fn()} />);
+
+    const slider = screen.getByRole("slider", {
+      name: "Build sequence timeline",
+    });
+    const max = slider.getAttribute("max") ?? "0";
+
+    fireEvent.change(slider, { target: { value: max } });
+
+    expect(screen.getByAltText("A301 architectural rendering reference")).toHaveStyle({
+      opacity: "1",
+    });
   });
 });
 

@@ -11,6 +11,7 @@ import type {
   TrancheId,
 } from "@/data/module-types";
 import { filterModules, sortBuildingZones } from "@/lib/module-helpers";
+import { BuildAnimationPlayer } from "./BuildAnimationPlayer";
 import { UnitDetailPanel } from "./UnitDetailPanel";
 import { ViewerToolbar } from "./ViewerToolbar";
 
@@ -44,6 +45,7 @@ export function DashboardShell() {
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(
     modules[0]?.id ?? null,
   );
+  const [buildAnimationOpen, setBuildAnimationOpen] = useState(false);
   const [mobileDetailMounted, setMobileDetailMounted] = useState(false);
   const [mobileDetailVisible, setMobileDetailVisible] = useState(false);
   const [detailPanelWidth, setDetailPanelWidth] = useState(
@@ -305,6 +307,7 @@ export function DashboardShell() {
               onToggleWireframe={() => setShowWireframe((value) => !value)}
               onToggleExploded={() => setExploded((value) => !value)}
               onOpenModuleDetail={handleOpenMobileDetail}
+              onPlayBuildSequence={() => setBuildAnimationOpen(true)}
             />
           </div>
           <BuildingViewer
@@ -352,6 +355,12 @@ export function DashboardShell() {
         visible={mobileDetailVisible}
         onClose={handleCloseMobileDetail}
       />
+      {buildAnimationOpen ? (
+        <BuildAnimationPlayer
+          modules={modules}
+          onClose={() => setBuildAnimationOpen(false)}
+        />
+      ) : null}
     </main>
   );
 }

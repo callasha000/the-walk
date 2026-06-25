@@ -8,6 +8,7 @@ import {
   EyeOff,
   Layers3,
   Map,
+  Play,
   SlidersHorizontal,
   SplitSquareVertical,
   Waypoints,
@@ -39,6 +40,7 @@ type ViewerToolbarProps = {
   onToggleWireframe: () => void;
   onToggleExploded: () => void;
   onOpenModuleDetail: () => void;
+  onPlayBuildSequence?: () => void;
 };
 
 const tranches: TrancheId[] = [1, 2, 3, 4];
@@ -60,6 +62,7 @@ export function ViewerToolbar({
   onToggleWireframe,
   onToggleExploded,
   onOpenModuleDetail,
+  onPlayBuildSequence,
 }: ViewerToolbarProps) {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -152,6 +155,12 @@ export function ViewerToolbar({
             onClick={onToggleExploded}
             icon={<SplitSquareVertical size={16} />}
           />
+          <ToolbarAction
+            ariaLabel="Play build sequence"
+            icon={<Play size={16} />}
+            label="Play"
+            onClick={onPlayBuildSequence ?? (() => undefined)}
+          />
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -216,6 +225,31 @@ export function ViewerToolbar({
         </div>
       </div>
     </section>
+  );
+}
+
+function ToolbarAction({
+  ariaLabel,
+  icon,
+  label,
+  onClick,
+}: {
+  ariaLabel: string;
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      title={ariaLabel}
+      aria-label={ariaLabel}
+      onClick={onClick}
+      className="flex h-9 min-w-9 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+    >
+      {icon}
+      <span className="hidden xl:inline">{label}</span>
+    </button>
   );
 }
 
